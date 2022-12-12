@@ -1,0 +1,142 @@
+---
+title: "CRC - Test pST run with lysed Matrigel"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+source("../../General/Code/Analysis_Functions.R")
+```
+
+## File paths
+```{r, warning=FALSE}
+set.seed(2022)
+file_path_pST <- "Data/Mass_Spec/SH_20220726_CRC_MatrigelUrea_AC20_AA_pST2_PSMs.txt"
+```
+
+## Process data
+```{r, warning=FALSE}
+psm_raw_phos <- read_delim(file_path_pST)
+    
+psm_filt_phos <- Filtering_PSMs(psm_raw = psm_raw_phos, ion_score_filter = FALSE, 
+                                    perculator_qvalue = 0.01, isolation_interference_filter = FALSE)
+    
+psm_filt_phos <- PTMRS_Filtering(psm_filt_phos = psm_filt_phos, ptmRS_score_filter = 75)
+
+psm_filt_phos <- Correct_Sequence_ptmRS(psm_filt_noNA_phos = psm_filt_phos, 
+                                             ptmRS_score_filter = 75)
+
+psm_sum_phos <- Sum_PSMs(psm_sum = psm_filt_phos)
+
+psm_sum_phos <- psm_sum_phos %>% 
+  mutate( HGNC_Symbol = str_extract(`Master Protein Descriptions`, "GN=([:alnum:]+)" ) ) %>% 
+  mutate( HGNC_Symbol = str_remove(HGNC_Symbol, "GN=" ) )
+```
+
+## Format data
+```{r}
+name_l = list("129" = "lysate_Matrigel_only", 
+              "130" = "lysate_Matrigel_cells",
+              "131" = "lysate_cells_only"
+)
+
+pST <- psm_sum_phos %>% 
+    select(`Annotated Sequence`, contains("HGNC_Symbol"), contains("Abundance"))
+newnames <- name_l
+names(newnames) <- paste0("Abundance ", names(name_l))
+newnames["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pST) <- newnames[colnames(pST)]
+
+
+```
+
+## Quality control
+### Nr. phospho sites
+```{r}
+print( paste( nrow(pST) , "pST peptides passed the filtering procedure. These peptides were detected from", length(unique(pST$HGNC_Symbol) ), "proteins." ))
+
+sum( is.na(pST$lysate_Matrigel_only) ) / length(pST$lysate_Matrigel_only)
+
+apply( pST[6:8], 2, function(f) median(f, na.rm = TRUE) )
+```
+
+# Analysis
+## Heatmaps
+```{r}
+par(bg = "black")
+pST[6:8] %>%
+  as.matrix() %>% 
+  #log2 %>% 
+  image()
+
+pST[6:8] %>%
+  as.matrix() %>% 
+  log2 %>% 
+  image()
+dev.off()
+```
+
+```{r}
+pheat_mat <- pST[6:8] %>%
+  as.matrix() %>% 
+  log2
+
+order_phmap <- pST[,-c(3:5)] %>% 
+  filter(!is.na(HGNC_Symbol), !is.na(Annotated_Sequence) ) %>% 
+  mutate(na_matrigel = is.na(lysate_Matrigel_only) ) %>%
+  arrange(lysate_cells_only,desc(na_matrigel) ) %>%
+  transmute(paste0(Annotated_Sequence, "_", HGNC_Symbol)) %>% unlist %>% unname
+
+pST[,-c(3:5)] %>% 
+  filter(!is.na(HGNC_Symbol), !is.na(Annotated_Sequence) ) %>% 
+  mutate(peptide = as.factor(paste0(Annotated_Sequence, "_", HGNC_Symbol) ) ) %>%
+  mutate(`pS/pT peptides` = factor(peptide, levels = order_phmap) ) %>%
+  pivot_longer(contains("lysate"), names_to = "sample", values_to = "values") %>%
+  mutate(sample = gsub("lysate_", "", sample),
+         sample = gsub("c", "C", sample),
+         sample = gsub("l_C", "l+c", sample),
+         sample = as.factor(gsub("_", " ", sample)) ) %>%
+  mutate(sample = factor(sample, levels = c("Cells only", "Matrigel+cells", "Matrigel only") )) %>%
+  mutate(`log10(intensities)` = log10(values)) %>%
+  ggplot(aes(sample, `pS/pT peptides`, fill = `log10(intensities)` ), color = NULL ) +
+  geom_tile() +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
+        axis.title.x = element_blank()) +
+  scale_fill_continuous(type = "viridis" )
+```
+
+## Histogram
+```{r}
+#pST %>% 
+#  pivot_longer(contains("lysate"), names_to = "sample", values_to = "values") %>%
+#  ggplot(aes(values, fill = sample)) +
+#  geom_density(alpha = 0.5) +
+#  scale_x_log10() + 
+#  theme_bw()
+
+pST %>% 
+  pivot_longer(contains("lysate"), names_to = "sample", values_to = "values") %>%
+  mutate(values = if_else(is.na(values), 1, values)) %>%
+  ggplot(aes(values, fill = sample)) +
+  geom_density(alpha = 0.5) +
+  scale_x_log10() + 
+  theme_bw()
+```
+
+# Conclusion
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```
