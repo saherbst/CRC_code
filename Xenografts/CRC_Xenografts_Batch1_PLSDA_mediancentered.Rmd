@@ -1,0 +1,309 @@
+---
+title: "PLSDA - DIPG Batch 1"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+DIPG_FirstBatch_DataProcessing Script
+
+```{r}
+load("../Data/Cache/DIPG_FirstBatch_DataProcessingMissingValues40.RData")
+```
+
+# TODO
+
+* Find out whether I need to vsn
+* Look at raw data from bridge channel
+* Where do the missing values in whole proteome data come from?
+* Whole proteome: Normalise abundances by total proteome abundance mean: did I do it correctly or do I have to mean center first?
+* Match BBB and PKIDB properly
+* Understand PLSDA results
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+library(mixOmics)
+source("../../../General/Code/Analysis_Functions.R")
+source("DIPG_FirstBatch_Functions.R")
+```
+
+## Functions
+### PLSDA
+```{r}
+Tune_And_Perform_PLSDA <- function(X, Y, folds, repeats, scale = TRUE, upperlimitfeatures = 200, initial_nr_of_components = 10, progressBar = TRUE){
+  plsda <- splsda( X = X, 
+         Y= Y, scale = scale, ncomp = initial_nr_of_components)
+
+    message("Done calculating initial PLSDA")
+  message("Tuning components:")
+  perf.plsda <- perf(plsda, validation = "Mfold", 
+                            folds = folds, nrepeat = repeats, # use repeated cross-validation
+                            progressBar = progressBar, auc = TRUE) # include AUC values
+  plot(perf.plsda, col = color.mixo(5:7), 
+       sd = TRUE,
+       legend.position = "horizontal")
+  #perf.plsda$choice.ncomp
+  message("Done tuning components")
+  
+  # grid of possible keepX values that will be tested for each component
+  list.keepX <- c(1:20,  seq(20, upperlimitfeatures, 10))
+  
+  message("Tune number of selected features:")
+  # undergo the tuning process to determine the optimal number of variables
+  tune.plsda <- tune.splsda(X = X, Y= Y, scale = scale,
+         ncomp = perf.plsda$choice.ncomp[2,1], validation = 'Mfold',
+         folds = folds, nrepeat = repeats, # use repeated cross-validation
+         dist = 'max.dist', # use max.dist measure
+         measure = "BER", # use balanced error rate of dist measure
+         test.keepX = list.keepX,
+         progressBar = progressBar,
+         cpus = 2) 
+  p_tune_feat <- plot(tune.plsda, col = color.jet(perf.plsda$choice.ncomp[2,1]))
+  print(p_tune_feat)
+  message(paste("Optimal number of components:", tune.plsda$choice.ncomp$ncomp ) )
+  message("Optimal number of selected features per component:")
+  print(tune.plsda$choice.keepX)
+  optimal.ncomp <- tune.plsda$choice.ncomp$ncomp
+  optimal.keepX <- tune.plsda$choice.keepX[1:optimal.ncomp]
+  
+  message("Calculate final sPLSDA model")
+  final.splsda <- splsda(X, Y, 
+                         ncomp = optimal.ncomp, 
+                         keepX = optimal.keepX, scale = scale)
+#  perf.final.splsda <- perf(final.splsda, 
+#                          folds = folds, nrepeat = repeats, # use #repeated cross-validation
+#                          validation = "Mfold", dist = "max.dist",  # #use max.dist measure
+#                          progressBar = FALSE, auc = TRUE)
+#  perf.final.splsda$auc
+  return(final.splsda)
+}
+```
+
+### GSEA
+```{r}
+Run_GSEA_PLSDA <- function(PLSDA_result, component){
+  ranked_list <- 
+    PLSDA_result$loadings$X %>% 
+    as.data.frame() %>%
+    rownames_to_column("peptide") %>%
+    as_tibble() %>%
+    separate(peptide, into = c("HGNC_Symbol", "Annotated_Sequence")) %>%
+    select(HGNC_Symbol, FC = {{ component }} ) %>% 
+    mutate(absFC = abs(FC) ) %>%
+    group_by(HGNC_Symbol) %>%
+    arrange(desc(absFC) ) %>%
+    slice(1) %>%
+    ungroup %>%
+    arrange(FC)
+  
+  ranked_vector <- unlist(ranked_list[,2])
+  names(ranked_vector) <- mapIds(org.Hs.eg.db, 
+                                 keys = ranked_list$HGNC_Symbol,
+                                 column = "ENTREZID", keytype = "SYMBOL")
+  
+  ranked_vector <- ranked_vector[!is.na(names(ranked_vector)) ]
+  
+  pathways <- reactomePathways(names(ranked_vector))
+  fgseaRes <- fgsea(pathways, ranked_vector, maxSize=500)
+  
+  #print(head(fgseaRes))
+  
+  topPathwaysUp <- fgseaRes[ES > 0 & padj < 0.1][head(order(pval), n=10), pathway]
+  topPathwaysDown <- fgseaRes[ES < 0 & padj < 0.1][head(order(pval), n=10), pathway]
+  topPathways <- c(topPathwaysUp, rev(topPathwaysDown))
+  message(paste( length(topPathways), "pathways below FDR of 10%"))
+  if(length(topPathways) > 0 ){
+    plot.new()
+    ggplot() + theme_void()
+    plotGseaTable(pathways[topPathways], ranked_vector, fgseaRes, 
+                  gseaParam=0.5)
+  }
+}
+```
+
+# Analyses
+## Partial least squares discriminat analysis
+
+### Without normal
+#### pY
+##### Perform PLSDA
+```{r plsda_nonormal_pY}
+plsda_pY_nonormal <- Tune_And_Perform_PLSDA(
+  X = pY_mat_nonormal_normtomedian,
+  Y = as.factor( str_split( gsub("log2FC_", "", rownames( pY_mat_nonormal_normtomedian ) ), 
+         pattern = "-", simplify = TRUE )[,1] ),
+  repeats = 50, folds = 3, initial_nr_of_components = 4,
+  scale = TRUE, progressBar = FALSE)
+```
+
+##### Plot Components
+```{r}
+
+plotIndiv(plsda_pY_nonormal, comp = c(1,2), # plot samples from final model
+          col.per.group = PGPalette[c(1,2,5)],
+          ellipse = TRUE, legend = TRUE, # include 95% confidence ellipse
+          title = ' (a) sPLS-DA on pY, comp 1 & 2')
+
+plsda_pY_nonormal$prop_expl_var
+```
+
+##### Plot Loadings
+```{r, fig.height=7}
+plotLoadings(plsda_pY_nonormal, method = 'mean', contrib = 'max', comp = 1, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])    
+plotLoadings(plsda_pY_nonormal, method = 'mean', contrib = 'max', comp = 2, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])   
+#plotLoadings(plsda_pY_nonormal, method = 'mean', contrib = 'max', comp = 3, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])  
+```
+
+##### Correlation Circle Plot
+```{r}
+plotVar(plsda_pY_nonormal, cex =2, comp = c(1,2), var.names =  list(stringr::str_split(plsda_pY_nonormal$names$colnames$X, pattern = "_", simplify = T )[,1] ) )
+#plotVar(plsda_pY_nonormal, cex =2, comp = c(2,3), var.names =  list(stringr::str_split(plsda_pY_nonormal$names$colnames$X, pattern = "_", simplify = T )[,1] ) )
+#selectVar(plsda_pY_nonormal, comp = 1)$name 
+```
+
+##### GSEA
+```{r}
+Run_GSEA_PLSDA(PLSDA_result = plsda_pY_nonormal, component = comp1)
+Run_GSEA_PLSDA(PLSDA_result = plsda_pY_nonormal, component = comp2)
+```
+
+##### StringDB
+```{r}
+Plot_StringDB(
+  rownames(plsda_pY_nonormal$loadings$X[ (plsda_pY_nonormal$loadings$X[,1] != 0 ),] ) %>% 
+  str_split(pattern = "_", simplify = T) %>% .[,1])
+Plot_StringDB(
+  rownames(plsda_pY_nonormal$loadings$X[ (plsda_pY_nonormal$loadings$X[,2] != 0 ),] ) %>% 
+  str_split(pattern = "_", simplify = T) %>% .[,1])
+```
+
+#### pST
+##### Perform PLSDA
+```{r plsda_nonormal_pST}
+plsda_pST_nonormal <- Tune_And_Perform_PLSDA(
+  X = pST_mat_nonormal_normtomedian,
+  Y = as.factor( str_split( gsub("log2FC_", "", rownames( pST_mat_nonormal_normtomedian ) ), 
+         pattern = "-", simplify = TRUE )[,1] ),
+  repeats = 50, folds = 3, initial_nr_of_components = 4,
+  scale = TRUE, progressBar = FALSE)
+```
+
+##### Plot Components
+```{r}
+
+plotIndiv(plsda_pST_nonormal, comp = c(1,2), # plot samples from final model
+          col.per.group = PGPalette[c(1,2,5)],
+          ellipse = TRUE, legend = TRUE, # include 95% confidence ellipse
+          title = ' (a) sPLS-DA on pST, comp 1 & 2')
+
+plsda_pST_nonormal$prop_expl_var
+```
+
+##### Plot Loadings
+```{r, fig.height=7}
+plotLoadings(plsda_pST_nonormal, method = 'mean', contrib = 'max', comp = 1, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])    
+plotLoadings(plsda_pST_nonormal, method = 'mean', contrib = 'max', comp = 2, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])   
+#plotLoadings(plsda_pST_nonormal, method = 'mean', contrib = 'max', comp = 3, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])  
+```
+
+##### Correlation Circle Plot
+```{r}
+plotVar(plsda_pST_nonormal, cex =2, comp = c(1,2), var.names =  list(stringr::str_split(plsda_pST_nonormal$names$colnames$X, pattern = "_", simplify = T )[,1] ) )
+#plotVar(plsda_pST_nonormal, cex =2, comp = c(2,3), var.names =  #list(stringr::str_split(plsda_pST_nonormal$names$colnames$X, pattern = "_", simplify = T )[,1] ) )
+#selectVar(plsda_pST_nonormal, comp = 1)$name 
+```
+
+##### GSEA
+```{r}
+Run_GSEA_PLSDA(PLSDA_result = plsda_pST_nonormal, component = comp1)
+Run_GSEA_PLSDA(PLSDA_result = plsda_pST_nonormal, component = comp2)
+```
+
+##### StringDB
+```{r}
+Plot_StringDB(
+  rownames(plsda_pST_nonormal$loadings$X[ (plsda_pST_nonormal$loadings$X[,1] != 0 ),] ) %>% 
+  str_split(pattern = "_", simplify = T) %>% .[,1])
+Plot_StringDB(
+  rownames(plsda_pST_nonormal$loadings$X[ (plsda_pST_nonormal$loadings$X[,2] != 0 ),] ) %>% 
+  str_split(pattern = "_", simplify = T) %>% .[,1])
+```
+
+####  pY and pST combined
+##### Perform PLSDA
+```{r plsda_nonormal_pY_pST}
+overlap_pat <- intersect(rownames(pST_mat_nonormal_normtomedian), rownames(pY_mat_nonormal_normtomedian))
+stopifnot(rownames(pST_mat_nonormal_normtomedian[overlap_pat,]) == rownames(pY_mat_nonormal_normtomedian[overlap_pat,]) )
+mat_pYpST_nonormal <- cbind(pY_mat_nonormal_normtomedian[overlap_pat,], pST_mat_nonormal_normtomedian[overlap_pat,])
+
+plsda_pYpST_nonormal <- Tune_And_Perform_PLSDA(
+  X = mat_pYpST_nonormal[,!duplicated(colnames(mat_pYpST_nonormal))], 
+  Y = as.factor( str_split(gsub("log2FC_", "", rownames( mat_pYpST_nonormal ) ), 
+         pattern = "-", simplify = TRUE )[,1] ),  
+  repeats = 50, folds = 3, initial_nr_of_components = 5,
+  scale = TRUE, progressBar = FALSE)
+```
+
+##### Plot Components
+```{r}
+
+plotIndiv(plsda_pYpST_nonormal, comp = c(1,2), # plot samples from final model
+          col.per.group = PGPalette[c(1,2,5)],
+          ellipse = TRUE, legend = TRUE, # include 95% confidence ellipse
+          title = ' (a) sPLS-DA on pY and pST, comp 1 & 2')
+
+plsda_pYpST_nonormal$prop_expl_var
+```
+
+##### Plot Loadings
+```{r, fig.height=7}
+plotLoadings(plsda_pYpST_nonormal, method = 'mean', contrib = 'max', comp = 1, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])    
+plotLoadings(plsda_pYpST_nonormal, method = 'mean', contrib = 'max', comp = 2, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])   
+#plotLoadings(plsda_pYpST_nonormal, method = 'mean', contrib = 'max', comp = 3, size.name = 0.5, size.title = 1, legend.color = PGPalette[c(1,2,5)])  
+```
+
+##### Correlation Circle Plot
+```{r}
+plotVar(plsda_pYpST_nonormal, cex =2, comp = c(1,2), var.names =  list(stringr::str_split(plsda_pYpST_nonormal$names$colnames$X, pattern = "_", simplify = T )[,1] ) )
+#plotVar(plsda_pYpST_nonormal, cex =2, comp = c(2,3), var.names =  list(stringr::str_split(plsda_pYpST_nonormal$names$colnames$X, pattern = "_", simplify = T )[,1] ) )
+#selectVar(plsda_pYpST_nonormal, comp = 1)$name 
+```
+
+##### GSEA
+```{r, eval=FALSE}
+Run_GSEA_PLSDA(PLSDA_result = plsda_pYpST_nonormal, component = comp1)
+Run_GSEA_PLSDA(PLSDA_result = plsda_pYpST_nonormal, component = comp2)
+```
+
+##### StringDB
+```{r}
+Plot_StringDB(
+  rownames(plsda_pYpST_nonormal$loadings$X[ (plsda_pYpST_nonormal$loadings$X[,1] != 0 ),] ) %>% 
+  str_split(pattern = "_", simplify = T) %>% .[,1])
+Plot_StringDB(
+  rownames(plsda_pYpST_nonormal$loadings$X[ (plsda_pYpST_nonormal$loadings$X[,2] != 0 ),] ) %>% 
+  str_split(pattern = "_", simplify = T) %>% .[,1])
+```
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

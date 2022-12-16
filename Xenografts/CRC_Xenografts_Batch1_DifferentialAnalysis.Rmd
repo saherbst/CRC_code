@@ -1,0 +1,357 @@
+---
+title: "Differential phospho/protein analysis - DIPG Batch 1"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+DIPG_FirstBatch_DataProcessing Script
+
+```{r}
+load("../Data/Cache/DIPG_FirstBatch_DataProcessingMissingValues40.RData")
+```
+
+# TODO
+
+* Find out whether I need to vsn
+* Look at raw data from bridge channel
+* Where do the missing values in whole proteome data come from?
+* Whole proteome: Normalise abundances by total proteome abundance mean: did I do it correctly or do I have to mean center first?
+* Match BBB and PKIDB properly
+* Understand PLSDA results
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+source("../../../General/Code/Analysis_Functions.R")
+source("DIPG_FirstBatch_Functions.R")
+```
+
+# Analysis
+## DEP
+### Tyrosine
+#### Each condition vs normal
+```{r, eval=TRUE}
+data_diff_normal_vs_WT_pY <- test_diff(pY_se, type="manual", test = "WT_vs_normal")
+dep_normal_vs_WT_pY <- add_rejections_SH(data_diff_normal_vs_WT_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_normal_vs_WT_pY, contrast = "WT_vs_normal", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_normal_vs_WT_pY, comparison = "WT_vs_normal_diff")
+```
+
+```{r}
+data_diff_K27M_vs_normal_pY <- test_diff(pY_se, type="manual", test = "K27M_vs_normal")
+dep_K27M_vs_normal_pY <- add_rejections_SH(data_diff_K27M_vs_normal_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_K27M_vs_normal_pY, contrast = "K27M_vs_normal", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_K27M_vs_normal_pY, comparison = "K27M_vs_normal_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_K27M_vs_normal_pY, comparison = "K27M_vs_normal_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_G34R_vs_normal_pY <- test_diff(pY_se, type="manual", test = "G34R_vs_normal")
+dep_G34R_vs_normal_pY <- add_rejections_SH(data_diff_G34R_vs_normal_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_G34R_vs_normal_pY, contrast = "G34R_vs_normal", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_G34R_vs_normal_pY, comparison = "G34R_vs_normal_diff")
+```
+
+
+#### Each condition vs WT
+```{r}
+data_diff_K27M_vs_WT_pY <- test_diff(pY_se, type="manual", test = "K27M_vs_WT")
+dep_K27M_vs_WT_pY <- add_rejections_SH(data_diff_K27M_vs_WT_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_K27M_vs_WT_pY, contrast = "K27M_vs_WT", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_K27M_vs_WT_pY, comparison = "K27M_vs_WT_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_K27M_vs_WT_pY, comparison = "K27M_vs_WT_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_G34R_vs_WT_pY <- test_diff(pY_se, type="manual", test = "G34R_vs_WT")
+dep_G34R_vs_WT_pY <- add_rejections_SH(data_diff_G34R_vs_WT_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_G34R_vs_WT_pY, contrast = "G34R_vs_WT", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_G34R_vs_WT_pY, comparison = "G34R_vs_WT_diff")
+```
+
+
+#### Not normal vs normal
+```{r}
+data_diff_vs_normal_pY <- test_diff_to_all_other(pY_se, control = "normal")
+dep_vs_normal_pY <- add_rejections_SH(data_diff_vs_normal_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_vs_normal_pY, contrast = "not_normal_vs_normal", label_size = 2, add_names = TRUE, additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_vs_normal_pY, comparison = "not_normal_vs_normal_diff")
+```
+
+#### Not WT vs WT (cancer only)
+```{r}
+data_diff_vs_WT_nonormal_pY <- test_diff_to_all_other(pY_se[, pY_se$condition != "normal"], control = "WT")
+dep_vs_WT_nonormal_pY <- add_rejections_SH(data_diff_vs_WT_nonormal_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_vs_WT_nonormal_pY, contrast = "not_WT_vs_WT", label_size = 2, add_names = TRUE,
+                additional_title = "pY (no normal)")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_vs_WT_nonormal_pY, comparison = "not_WT_vs_WT_diff")
+```
+
+#### Not G34R vs G34R (cancer only)
+```{r}
+data_diff_vs_G34R_nonormal_pY <- test_diff_to_all_other(pY_se[, pY_se$condition != "normal"], control = "G34R")
+dep_vs_G34R_nonormal_pY <- add_rejections_SH(data_diff_vs_G34R_nonormal_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_vs_G34R_nonormal_pY, contrast = "not_G34R_vs_G34R", label_size = 2, add_names = TRUE,  additional_title = "pY (no normal)")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY, dep_vs_G34R_nonormal_pY, comparison = "not_G34R_vs_G34R_diff")
+```
+
+#### Not K27M vs K27M (cancer only)
+```{r}
+data_diff_vs_K27M_nonormal_pY <- test_diff_to_all_other(pY_se[, pY_se$condition != "normal"], control = "K27M")
+dep_vs_K27M_nonormal_pY <- add_rejections_SH(data_diff_vs_K27M_nonormal_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_vs_K27M_nonormal_pY, contrast = "not_K27M_vs_K27M", label_size = 2, add_names = TRUE,  additional_title = "pY (no normal)")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_vs_K27M_nonormal_pY, comparison = "not_K27M_vs_K27M_diff")
+```
+
+#### K27M vs G34R
+```{r}
+data_diff_K27M_vs_G34R_pY <- test_diff(pY_se, type = "manual", 
+                              test = c("K27M_vs_G34R"))
+dep_K27M_vs_G34R_pY <- add_rejections_SH(data_diff_K27M_vs_G34R_pY, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_K27M_vs_G34R_pY, contrast = "K27M_vs_G34R", label_size = 2, add_names = TRUE, additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_K27M_vs_G34R_pY, comparison = "K27M_vs_G34R_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+### Serine/Threonine
+#### Each condition vs normal
+```{r, eval=TRUE}
+data_diff_normal_vs_WT_pST <- test_diff(pST_se, type="manual", test = "WT_vs_normal")
+dep_normal_vs_WT_pST <- add_rejections_SH(data_diff_normal_vs_WT_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_normal_vs_WT_pST, contrast = "WT_vs_normal", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_normal_vs_WT_pST, comparison = "WT_vs_normal_diff")
+```
+
+```{r}
+data_diff_K27M_vs_normal_pST <- test_diff(pST_se, type="manual", test = "K27M_vs_normal")
+dep_K27M_vs_normal_pST <- add_rejections_SH(data_diff_K27M_vs_normal_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_K27M_vs_normal_pST, contrast = "K27M_vs_normal", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_K27M_vs_normal_pST, comparison = "K27M_vs_normal_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_K27M_vs_normal_pST, comparison = "K27M_vs_normal_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_G34R_vs_normal_pST <- test_diff(pST_se, type="manual", test = "G34R_vs_normal")
+dep_G34R_vs_normal_pST <- add_rejections_SH(data_diff_G34R_vs_normal_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_G34R_vs_normal_pST, contrast = "G34R_vs_normal", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_G34R_vs_normal_pST, comparison = "G34R_vs_normal_diff")
+```
+
+
+#### Each condition vs WT
+```{r}
+data_diff_K27M_vs_WT_pST <- test_diff(pST_se, type="manual", test = "K27M_vs_WT")
+dep_K27M_vs_WT_pST <- add_rejections_SH(data_diff_K27M_vs_WT_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_K27M_vs_WT_pST, contrast = "K27M_vs_WT", 
+                label_size = 2, add_names = TRUE,
+                 additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_K27M_vs_WT_pST, comparison = "K27M_vs_WT_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_K27M_vs_WT_pST, comparison = "K27M_vs_WT_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_G34R_vs_WT_pST <- test_diff(pST_se, type="manual", test = "G34R_vs_WT")
+dep_G34R_vs_WT_pST <- add_rejections_SH(data_diff_G34R_vs_WT_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_G34R_vs_WT_pST, contrast = "G34R_vs_WT", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_G34R_vs_WT_pST, comparison = "G34R_vs_WT_diff")
+```
+
+
+#### Not normal vs normal
+```{r}
+data_diff_vs_normal_pST <- test_diff_to_all_other(pST_se, control = "normal")
+dep_vs_normal_pST <- add_rejections_SH(data_diff_vs_normal_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_vs_normal_pST, contrast = "not_normal_vs_normal", label_size = 2, add_names = TRUE, additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_vs_normal_pST, comparison = "not_normal_vs_normal_diff")
+```
+
+#### Not WT vs WT (cancer only)
+```{r}
+data_diff_vs_WT_nonormal_pST <- test_diff_to_all_other(pST_se[, pST_se$condition != "normal"], control = "WT")
+dep_vs_WT_nonormal_pST <- add_rejections_SH(data_diff_vs_WT_nonormal_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_vs_WT_nonormal_pST, contrast = "not_WT_vs_WT", label_size = 2, add_names = TRUE,
+                additional_title = "pST (no normal)")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_vs_WT_nonormal_pST, comparison = "not_WT_vs_WT_diff")
+```
+
+
+#### Not G34R vs G34R (cancer only)
+```{r}
+data_diff_vs_G34R_nonormal_pST <- test_diff_to_all_other(pST_se[, pST_se$condition != "normal"], control = "G34R")
+dep_vs_G34R_nonormal_pST <- add_rejections_SH(data_diff_vs_G34R_nonormal_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_vs_G34R_nonormal_pST, contrast = "not_G34R_vs_G34R", label_size = 2, add_names = TRUE,
+                additional_title = "pST (no normal)")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_vs_G34R_nonormal_pST, comparison = "not_G34R_vs_G34R_diff")
+```
+
+#### Not K27M vs K27M (cancer only)
+```{r}
+data_diff_vs_K27M_nonormal_pST <- test_diff_to_all_other(pST_se[, pST_se$condition != "normal"], control = "K27M")
+dep_vs_K27M_nonormal_pST <- add_rejections_SH(data_diff_vs_K27M_nonormal_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_vs_K27M_nonormal_pST, contrast = "not_K27M_vs_K27M", label_size = 2, add_names = TRUE,
+                additional_title = "pST (no normal)")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_vs_K27M_nonormal_pST, comparison = "not_K27M_vs_K27M_diff")
+```
+
+#### K27M vs G34R
+```{r}
+data_diff_K27M_vs_G34R_pST <- test_diff(pST_se, type = "manual", 
+                              test = c("K27M_vs_G34R"))
+dep_K27M_vs_G34R_pST <- add_rejections_SH(data_diff_K27M_vs_G34R_pST, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_K27M_vs_G34R_pST, contrast = "K27M_vs_G34R", label_size = 2, add_names = TRUE, additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_noNA, dep_K27M_vs_G34R_pST, comparison = "K27M_vs_G34R_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+
+### Whole proteome
+#### Each condition vs WT
+```{r, eval=TRUE}
+data_diff_normal_vs_WT_prot <- test_diff(prot_se, type="manual", test = "normal_vs_WT")
+dep_normal_vs_WT_prot <- add_rejections_SH(data_diff_normal_vs_WT_prot, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_normal_vs_WT_prot, contrast = "normal_vs_WT", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "prot")
+#Return_DEP_Hits_Plots(data = prot_top3peptidemedian, dep_normal_vs_WT_prot, comparison = "normal_vs_WT_diff")
+
+data_diff_K27M_vs_WT_prot <- test_diff(prot_se, type="manual", test = "K27M_vs_WT")
+dep_K27M_vs_WT_prot <- add_rejections_SH(data_diff_K27M_vs_WT_prot, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_K27M_vs_WT_prot, contrast = "K27M_vs_WT", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "prot")
+#Return_DEP_Hits_Plots(data = prot_top3peptidemedian, dep_K27M_vs_WT_prot, comparison = "K27M_vs_WT_diff")
+
+data_diff_G34R_vs_WT_prot <- test_diff(prot_se, type="manual", test = "G34R_vs_WT")
+dep_G34R_vs_WT_prot <- add_rejections_SH(data_diff_G34R_vs_WT_prot, alpha = 0.05, lfc = log2(1.2))
+plot_volcano_SH(dep_G34R_vs_WT_prot, contrast = "G34R_vs_WT", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "prot")
+#Return_DEP_Hits_Plots(data = prot_top3peptidemedian, dep_G34R_vs_WT_prot, comparison = "G34R_vs_WT_diff")
+```
+
+
+```{r}
+# plot_single(dep, proteins = c("GFAP_SVsEGHLK"), type = "centered")
+```
+
+```{r}
+# test_gsea(dep, )
+```
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

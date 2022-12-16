@@ -1,0 +1,168 @@
+---
+title: "Quality control correlations - DIPG Batch 1"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+DIPG_FirstBatch_DataProcessing Script
+
+```{r}
+load("../Data/Cache/DIPG_FirstBatch_DataProcessingMissingValues40.RData")
+```
+
+# TODO
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+source("../../../General/Code/Analysis_Functions.R")
+source("DIPG_FirstBatch_Functions.R")
+```
+
+# Quality control
+## Correlation between samples
+```{r}
+
+
+psych::corPlot(pY[, grep("log2FC", colnames(pY) )], scale = FALSE, diag = TRUE, upper = FALSE, zlim = c(0, 1 ), 
+               main = "Correlation samples pY", xlas =2, labels = gsub( "log2FC_", "", colnames(pY[, grep("log2FC", colnames(pY) )]) ) )
+
+psych::corPlot(pST[, grep("log2FC", colnames(pST) )], scale = FALSE, diag = TRUE, upper = FALSE, zlim = c(0, 1 ), 
+               main = "Correlation samples pST", xlas =2,  labels = gsub( "log2FC_", "", colnames(pST[, grep("log2FC", colnames(pST) )]) ) )
+
+psych::corPlot(prot[, grep("log2FC", colnames(prot) )], scale = FALSE, diag = TRUE, upper = FALSE, zlim = c(0, 1 ), 
+               main = "Correlation samples whole proteome", xlas =2,  labels = gsub( "log2FC_", "", colnames(prot[, grep("log2FC", colnames(prot) )]) ) )
+```
+
+## Correlation between peptides
+### Phospho-Tyrosines 
+```{r, fig.width=10, fig.height=10}
+corr_mat_pY <- round(cor(pY_mat),2)
+ 
+# reorder corr matrix
+# using corr coefficient as distance metric
+dist_pY <- as.dist((1-corr_mat_pY)/2)
+ 
+# hierarchical clustering the dist matrix
+hc_pY <- hclust(dist_pY)
+plot(as.dendrogram(hc_pY))
+#rect.hclust(hc, k = 8)
+corr_mat_pY <-corr_mat_pY[hc_pY$order, hc_pY$order]
+ 
+# reduce the size of correlation matrix
+melted_corr_mat_pY <- reshape2::melt(corr_mat_pY)
+#head(melted_corr_mat)
+ 
+#plotting the correlation heatmap
+ggplot(data = melted_corr_mat_pY, aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile() +
+  scale_fill_continuous(type = "viridis") +
+  theme(axis.text.x = element_blank(), axis.text.y = element_text(size = 2.5))
+```
+
+### Phospho-Serines/Threonines 
+```{r, fig.width=10, fig.height=10}
+corr_mat_pST <- round(cor(pST_mat),2)
+ 
+# reorder corr matrix
+# using corr coefficient as distance metric
+dist_pST <- as.dist((1-corr_mat_pST)/2)
+ 
+# hierarchical clustering the dist matrix
+hc_pST <- hclust(dist_pST)
+plot(as.dendrogram(hc_pST))
+#rect.hclust(hc, k = 8)
+corr_mat_pST <-corr_mat_pST[hc_pST$order, hc_pST$order]
+ 
+# reduce the size of correlation matrix
+melted_corr_mat_pST <- reshape2::melt(corr_mat_pST)
+#head(melted_corr_mat)
+ 
+#plotting the correlation heatmap
+ggplot(data = melted_corr_mat_pST, aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile() +
+  scale_fill_continuous(type = "viridis") +
+  theme(axis.text.x = element_blank(), axis.text.y = element_text(size = 2.5))
+```
+
+### Phospho-Tyrosines and Phospho-Serines/Threonines combined
+```{r, fig.width=10, fig.height=10}
+overlap_pats <- intersect(rownames(pY_mat), rownames(pST_mat) )
+stopifnot(rownames(pST_mat[overlap_pats,]) == rownames(pY_mat[overlap_pats,]) )
+corr_mat_pYpST <- round(cor(cbind(pY_mat[overlap_pats,], pST_mat[overlap_pats,])),2)
+ 
+# reorder corr matrix
+# using corr coefficient as distance metric
+dist_pYpST <- as.dist((1-corr_mat_pYpST)/2)
+ 
+# hierarchical clustering the dist matrix
+hc_pYpST <- hclust(dist_pYpST)
+plot(as.dendrogram(hc_pYpST))
+#rect.hclust(hc, k = 8)
+corr_mat_pYpST <-corr_mat_pYpST[hc_pYpST$order, hc_pYpST$order]
+ 
+# reduce the size of correlation matrix
+melted_corr_mat_pYpST <- reshape2::melt(corr_mat_pYpST)
+#head(melted_corr_mat)
+ 
+#plotting the correlation heatmap
+ggplot(data = melted_corr_mat_pYpST, aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile() +
+  scale_fill_continuous(type = "viridis") +
+  theme(axis.text.x = element_blank(), axis.text.y = element_text(size = 2.5))
+```
+ 
+### No normal Phospho-Tyrosines and Phospho-Serines/Threonines combined
+#### Heatmap
+```{r, fig.width=10, fig.height=10}
+pST_mat_nonormal <- pST_mat[!grepl("normal", rownames(pST_mat)),]
+pY_mat_nonormal <- pY_mat[!grepl("normal", rownames(pY_mat)),]
+overlap_pats <- intersect(rownames(pY_mat_nonormal), rownames(pST_mat_nonormal) )
+stopifnot(rownames(pST_mat_nonormal[overlap_pats,]) == rownames(pY_mat_nonormal[overlap_pats,]) )
+
+corr_mat_pYpST_nonormal <- round(cor(cbind(pY_mat_nonormal[overlap_pats,], pST_mat_nonormal[overlap_pats,])),2)
+ 
+# reorder corr matrix
+# using corr coefficient as distance metric
+dist_pYpST_nonormal <- as.dist((1-corr_mat_pYpST_nonormal)/2)
+ 
+# hierarchical clustering the dist matrix
+hc_pYpST_nonormal <- hclust(dist_pYpST_nonormal)
+plot(as.dendrogram(hc_pYpST_nonormal))
+#rect.hclust(hc, k = 8)
+corr_mat_pYpST_nonormal <-corr_mat_pYpST_nonormal[hc_pYpST_nonormal$order, hc_pYpST_nonormal$order]
+ 
+# reduce the size of correlation matrix
+melted_corr_mat_pYpST_nonormal <- reshape2::melt(corr_mat_pYpST_nonormal)
+#head(melted_corr_mat)
+ 
+#plotting the correlation heatmap
+ggplot(data = melted_corr_mat_pYpST_nonormal, aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile() +
+  scale_fill_continuous(type = "viridis") +
+  theme(axis.text.x = element_blank(), axis.text.y = element_text(size = 2.5))
+```
+
+
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

@@ -1,0 +1,453 @@
+---
+title: "CRC - Xenografts batch1 Set1"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+Analysis date: `r Sys.Date()`
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+source("../../../General/Code/Analysis_Functions.R")
+```
+
+```{r}
+plot_centered_pheatmap_around_1 <- function(val_pmap){
+  br <- seq( -( max(abs( min(val_pmap)), abs(max(val_pmap))) ) , ( max(abs( min(val_pmap)), abs(max(val_pmap))) + 2 ), 0.1 )
+  br <- br[ min(sum( br < min(val_pmap) ) , sum(br > max(val_pmap) ) ) : ( length(br) - min(sum( br < min(val_pmap) ) , sum(br > max(val_pmap) ) ) ) ]
+  val_pmap %>% 
+    pheatmap::pheatmap(col = colorRampPalette(c("navy", "white", "firebrick3"))(length(br)), breaks = br)
+}
+```
+
+## File paths
+```{r, warning=FALSE}
+set.seed(2022)
+file_path_pY <- "../Data/Mass_Spec/SH_20221207_CRC_Xenografts_Batch1_Set1_TMTPro_AC49_AA_pY2_PSMs.txt"
+#file_path_pST <- "Data/Mass_Spec/SH_20221006_Sepsis_MACSlowvolume_TMT10_AC39_AA_pST_PSMs.txt"
+file_path_sup <- "../Data/Mass_Spec/SH_20221207_CRC_Xenografts_Batch1_Set1_TMTpro_pre6+AC46_HR1-50min_sup_PSMs.txt"
+```
+
+
+## Process data
+```{r, warning=FALSE}
+pY <- Filter_And_Average_PSMs(file_path_phos = file_path_pY,  row_center_phos = TRUE,
+                              file_path_sup = file_path_sup, 
+                              return_data = "phos",  NA_cutoff_channel = 0.4,
+                              NA_replace = FALSE, NA_peptide_cutoff = 0,
+                              ion_score_filter = 20) %>%
+    filter(grepl("y", `Annotated Sequence` ) )
+
+pY_raw <- pY
+
+#pST <- Filter_And_Average_PSMs(file_path_phos = file_path_pST, row_center_phos = TRUE,
+#                              file_path_sup = file_path_sup,
+#                              return_data = "phos", 
+#                              NA_replace = FALSE, NA_peptide_cutoff = 0, NA_cutoff_channel = 0.05,
+#                              ion_score_filter = 10) %>%
+#  filter(grepl("s|t", `Annotated Sequence` ) )
+#pST_raw <- pST
+```
+
+## Format data
+### Annotate
+```{r}
+name_l = list( "126" = "Xenograft_EBC_24h_1",
+               "127N" = "Xenograft_ctrl_5d_6",
+               "127C" = "Xenograft_E_24h_4",
+               "128N"	= "Xenograft_ctrl_5d_3",
+               "128C"	 = "Xenograft_EC_24h_1",
+               "129N"	= "Xenograft_EBC_24h_2",
+               "129C"	= "Xenograft_ctrl_5d_2",
+               "130N"	= "Xenograft_E_24h_3",
+               "130C"	= "Xenograft_EBC_24h_3",
+               "131N"	= "Xenograft_E_24h_1",
+               "131C"	= "Xenograft_EC_24h_2",
+               "132N"	= "Xenograft_E_24h_2",
+               "132C"	= "Xenograft_ctrl_5d_7",
+               "133N"	= "Xenograft_EC_24h_3",
+               "133C"	= "Xenograft_ctrl_5d_5",
+               "134N"= "Xenograft_ctrl_5d_1"
+)
+  
+
+prep_l = list( "Xenograft_EBC_24h_1" = "prep1" ,
+               "Xenograft_ctrl_5d_6"= "prep2",
+               "Xenograft_E_24h_4"= "prep2",
+               "Xenograft_ctrl_5d_3" = "prep1",
+               "Xenograft_EC_24h_1"= "prep1",
+               "Xenograft_EBC_24h_2"= "prep1",
+               "Xenograft_ctrl_5d_2" = "prep2",
+               "Xenograft_E_24h_3"= "prep1",
+               "Xenograft_EBC_24h_3"= "prep2",
+               "Xenograft_E_24h_1"= "prep1",
+               "Xenograft_EC_24h_2"= "prep2",
+               "Xenograft_E_24h_2"= "prep1",
+               "Xenograft_ctrl_5d_7" = "prep1",
+               "Xenograft_EC_24h_3"= "prep2",
+               "Xenograft_ctrl_5d_5" = "prep1",
+               "Xenograft_ctrl_5d_1" = "prep1"
+               )
+
+seppack_l = list( "Xenograft_EBC_24h_1" = "seppack1" ,
+               "Xenograft_ctrl_5d_6"= "seppack2",
+               "Xenograft_E_24h_4"= "seppack1",
+               "Xenograft_ctrl_5d_3" = "seppack1",
+               "Xenograft_EC_24h_1"= "seppack1",
+               "Xenograft_EBC_24h_2"= "seppack2",
+               "Xenograft_ctrl_5d_2" = "seppack1",
+               "Xenograft_E_24h_3"= "seppack2",
+               "Xenograft_EBC_24h_3"= "seppack1",
+               "Xenograft_E_24h_1"= "seppack1",
+               "Xenograft_EC_24h_2"= "seppack1",
+               "Xenograft_E_24h_2"= "seppack2",
+               "Xenograft_ctrl_5d_7" = "seppack2",
+               "Xenograft_EC_24h_3"= "seppack2",
+               "Xenograft_ctrl_5d_5" = "seppack2",
+               "Xenograft_ctrl_5d_1" = "seppack1"
+               )
+```
+
+### Log2 Transform
+```{r}
+pY <- pY_raw %>% 
+  Minimize_df(name_l = name_l) %>%
+  mutate_at(vars(contains("Xenograft")), function(x) log2(x))
+
+#pST <- pST_raw %>% 
+#  Minimize_df(name_l = name_l) %>%
+#  mutate_at(vars(contains("neutrophils")), function(x) log2(x))
+```
+
+### Matrix
+```{r}
+pY_mat <- pY_raw %>% 
+  Minimize_df(name_l = name_l) %>%
+  select(-HGNC_Symbol, -Annotated_Sequence) %>%
+  as.matrix() %>% 
+  t()
+
+colnames(pY_mat) <- paste0( pY_raw$HGNC_Symbol, "_", pY_raw$`Annotated Sequence` )
+
+#pST_mat <- pST_raw %>% 
+#  Minimize_df(name_l = name_l) %>%
+#  select(-HGNC_Symbol, -Annotated_Sequence) %>%
+#  as.matrix() %>% 
+#  t()
+#
+#colnames(pST_mat) <- paste0( pST_raw$HGNC_Symbol, "_", pST_raw$`Annotated Sequence` )
+```
+
+# Quality control
+## Nr. phospho sites
+```{r}
+print( paste( nrow(pY) , "pY peptides passed the filtering procedure. These peptides were detected from", length(unique(pY$HGNC_Symbol) ), "proteins." ))
+
+#print( paste( nrow(pST) , "pST peptides passed the filtering procedure. These peptides were detected from", #length(unique(pST$HGNC_Symbol) ), "proteins." ))
+```
+
+## Distributions
+### pY Abundances
+```{r}
+pY_raw %>%
+  select(contains("Abundance"), -contains("TMT"), -contains("Centered_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Raw abundances")
+
+pY_raw %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Abundances normalised to sup")
+
+pY_raw %>%
+  select(contains("Centered_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("Centered abundances")
+
+pY_raw %>%
+  select(contains("Abundance"), -contains("TMT"), -contains("Centered_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+pY_raw %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+```
+
+### pST Abundances
+```{r, eval=FALSE}
+pST_raw %>%
+  select(contains("Abundance"), -contains("TMT"), -contains("Centered_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Raw abundances")
+
+pST_raw %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Abundances normalised to sup")
+
+pST_raw %>%
+  select(contains("Centered_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("Centered abundances")
+
+pST_raw %>%
+  select(contains("Abundance"), -contains("TMT"), -contains("Centered_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+pST_raw %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+```
+
+## Principle component analysis
+### Phospho-Tyrosines
+```{r, fig.width=3, fig.height=3}
+pY_mat %>%
+  prcomp() %>% 
+  summary() %>% 
+  .$importance %>% t() %>% as.data.frame() %>%
+  rownames_to_column("PC") %>% 
+  as_tibble() %>%
+  mutate(PC = as.factor(PC)) %>%
+  mutate(PC = factor(PC, levels = PC)) %>%
+  ggplot(aes(PC, `Proportion of Variance` )) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r, fig.width=9, fig.height=3}
+PCA_pY <- pY_mat %>%
+  prcomp() %>% 
+  .$x %>% 
+  as.data.frame() %>%
+  rownames_to_column("sample")
+
+PCApY_rot <- pY_mat %>%
+  prcomp() %>%
+  .$rotation
+PCApY_rot <- bind_cols(PCApY_rot, 
+  (pY_raw %>% 
+    Minimize_df(name_l = name_l) %>%
+    select(HGNC_Symbol, Annotated_Sequence) ) ) %>% arrange(desc(PC1) )
+
+PCA_pY$prep <- unlist(prep_l[PCA_pY$sample])
+PCA_pY$seppack <- unlist(seppack_l[PCA_pY$sample])
+
+PCA_pY <- PCA_pY %>% 
+  separate(sample, into = c("Xenograft", "treatment", "day", "replicate"), sep = "_")
+
+PCA12_pY <- PCA_pY %>% 
+  ggplot(aes(PC1, PC2, color = treatment, shape = day )) +
+  geom_point(size = 3) +
+  theme_classic() +
+  #scale_colour_manual(values=PGPalette[c(1,5)]) +
+  #geom_text(aes(label = replicate), color = "black", nudge_x = 1) +
+  ggtitle("pY")
+
+PCA34_pY <- PCA_pY %>% 
+  ggplot(aes(PC3, PC4, color = treatment, shape = day )) +
+  geom_point(size = 3) +
+  theme_classic() +
+  #scale_colour_manual(values=PGPalette[c(1,5)]) +
+  #geom_text(aes(label = replicate), color = "black", nudge_x = 1) +
+  ggtitle("pY")
+
+ggpubr::ggarrange(PCA12_pY, PCA34_pY)
+
+PCA12_pY <- PCA_pY %>% 
+  ggplot(aes(PC1, PC2, color = prep, shape = seppack )) +
+  geom_point(size = 3) +
+  theme_classic() +
+  #scale_colour_manual(values=PGPalette[c(1,5)]) +
+  #geom_text(aes(label = replicate), color = "black", nudge_x = 1) +
+  ggtitle("pY")
+
+PCA34_pY <- PCA_pY %>% 
+  ggplot(aes(PC3, PC4, color = prep, shape = seppack )) +
+  geom_point(size = 3) +
+  theme_classic() +
+  #scale_colour_manual(values=PGPalette[c(1,5)]) +
+  #geom_text(aes(label = replicate), color = "black", nudge_x = 1) +
+  ggtitle("pY")
+
+ggpubr::ggarrange(PCA12_pY, PCA34_pY)
+```
+
+These are the weights of the peptides loaded onto the principle components:
+
+```{r, fig.width=4, fig.height=3}
+DT::datatable( PCApY_rot, 
+              class = 'cell-border stripe', rownames = FALSE) %>% 
+  DT::formatRound(c('PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6'), 3)
+```
+
+### Phospho-Serines and Phospho-Threonines
+```{r, fig.width=3, fig.height=3, eval=FALSE}
+pST_mat %>%
+  prcomp() %>% 
+  summary() %>% 
+  .$importance %>% t() %>% as.data.frame() %>%
+  rownames_to_column("PC") %>% 
+  as_tibble() %>%
+  mutate(PC = as.factor(PC)) %>%
+  mutate(PC = factor(PC, levels = PC)) %>%
+  ggplot(aes(PC, `Proportion of Variance` )) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r, fig.width=9, fig.height=3, eval=FALSE}
+PCA_pST <- pST_mat %>%
+  prcomp() %>% 
+  .$x %>% 
+  as.data.frame() %>%
+  rownames_to_column("sample")
+
+PCApST_rot <- pST_mat %>%
+  prcomp() %>%
+  .$rotation
+PCApST_rot <- bind_cols(PCApST_rot, 
+  (pST_raw %>% 
+    Minimize_df(name_l = name_l) %>%
+    select(HGNC_Symbol, Annotated_Sequence) ) ) %>% arrange(desc(PC1) )
+
+PCA_pST <- PCA_pST %>% 
+  separate(sample, into = c("cells", "condition", "Volume", "replicate"), sep = "_")
+
+PCA12_pST <- PCA_pST %>% 
+  ggplot(aes(PC1, PC2, color = condition, shape = replicate )) +
+  geom_point(size = 3) +
+  theme_classic() +
+  scale_colour_manual(values=PGPalette[c(1,5)]) +
+  #geom_text(aes(label = replicate), color = "black", nudge_x = 1) +
+  ggtitle("pS/pT")
+
+PCA34_pST <- PCA_pST %>% 
+  ggplot(aes(PC3, PC4, color = condition, shape = replicate )) +
+  geom_point(size = 3) +
+  theme_classic() +
+  scale_colour_manual(values=PGPalette[c(1,5)]) +
+  #geom_text(aes(label = replicate), color = "black", nudge_x = 1) +
+  ggtitle("pS/pT")
+
+ggpubr::ggarrange(PCA12_pST, PCA34_pST)
+```
+
+These are the weights of the peptides loaded onto the principle components:
+
+```{r, fig.width=4, fig.height=3, eval=FALSE}
+DT::datatable( PCApST_rot, 
+              class = 'cell-border stripe', rownames = FALSE) %>% 
+  DT::formatRound(c('PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6'), 3)
+```
+
+## Correlation between samples
+```{r}
+psych::corPlot(pY[, 3:18], scale = FALSE, diag = TRUE, upper = FALSE, zlim = c(0, 1 ), 
+               main = "Correlation samples pY", xlas =2, labels =  colnames(pY[, 3:18]) ) 
+
+#psych::corPlot(pST[, 3:8], scale = FALSE, diag = TRUE, upper = FALSE, zlim = c(0, 1 ), 
+#               main = "Correlation samples pST", xlas =2, labels =  colnames(pST[, 3:8]) ) 
+```
+
+# Analysis
+## Heatmaps
+### Phospho-Tyrosines
+#### Clustered
+```{r, fig.height=8, fig.width=4}
+pY_raw %>% 
+  Minimize_df(name_l = name_l, centered = TRUE ) %>%
+  select(-HGNC_Symbol, -Annotated_Sequence) %>%
+  as.matrix() %>%
+  plot_centered_pheatmap_around_1
+```
+
+### Phospho-Serines and Phospho-Threonines
+#### Clustered
+```{r, fig.height=8, fig.width=4, eval=FALSE}
+pST %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence) %>%
+  as.matrix() %>%
+  pheatmap::pheatmap(col = colorRampPalette(c("navy", "white", "firebrick3"))(50))
+
+pST_centered_tmp <- pST_raw %>% 
+  Minimize_df(name_l = name_l, centered = TRUE )
+pST_centered_tmp[,-c(1,2)][pST_centered_tmp[,-c(1,2)] >2] <- 2
+pST_centered_tmp %>%  
+  select(-HGNC_Symbol, -Annotated_Sequence) %>%
+  as.matrix() %>%
+  pheatmap::pheatmap(col = colorRampPalette(c("navy", "white", "firebrick3"))(50))
+```
+
+## Searchable tables
+### Phospho-Tyrosines
+```{r}
+DT::datatable( pY, 
+              class = 'cell-border stripe', rownames = FALSE, 
+              colnames = colnames(pY)) %>% DT::formatRound(colnames(pY)[3:18], 3)
+```
+
+### Phospho-Serines and Phospho-Threonines
+```{r, eval=FALSE}
+DT::datatable( pST, 
+              class = 'cell-border stripe', rownames = FALSE, 
+              colnames = colnames(pST)) %>% DT::formatRound(colnames(pST)[3:8], 3)
+```
+
+# Conclusion
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

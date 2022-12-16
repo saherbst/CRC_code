@@ -1,0 +1,633 @@
+---
+title: "Quality control - Distributions - DIPG Batch 1"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+DIPG_FirstBatch_DataProcessing Script
+
+```{r}
+load("../Data/Cache/Xenografts_Batch1_DataProcessing.RData")
+```
+
+# TODO
+
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+source("../../../General/Code/Analysis_Functions.R")
+source("CRC_Xenografts_Batch1_Functions.R")
+```
+
+# Quality control
+## Nr. phospho sites
+```{r}
+print( paste( nrow(pY_Set1) , "pY peptides passed the filtering procedure for Set 1. These peptides were detected from", length(unique(pY_Set1$HGNC_Symbol) ), "proteins." ))
+#print( paste( nrow(pST_Set1) , "pST peptides passed the filtering procedure for Set 1. These peptides were detected from", length(unique(pST$HGNC_Symbol) ), "proteins." ))
+
+print( paste( nrow(pY_Set2) , "pY peptides passed the filtering procedure for Set 2. These peptides were detected from", length(unique(pY_Set2$HGNC_Symbol) ), "proteins." ))
+#print( paste( nrow(pST_Set2) , "pST peptides passed the filtering procedure for Set 2. These peptides were detected from", length(unique(pST$HGNC_Symbol) ), "proteins." ))
+
+print( paste( nrow(pY_Set3) , "pY peptides passed the filtering procedure for Set 2. These peptides were detected from", length(unique(pY_Set3$HGNC_Symbol) ), "proteins." ))
+
+print( paste( nrow(pY_noNA) , "pY peptides passed the filtering procedure for the sets combined. These peptides were detected from", length(unique(pY_noNA$HGNC_Symbol) ), "proteins." ))
+#print( paste( nrow(pST_noNA) , "pST peptides passed the filtering procedure for the sets combined. These peptides were detected from", length(unique(pST_noNA$HGNC_Symbol) ), "proteins." ))
+```
+
+## Nr. proteins whole proteome
+```{r, eval=FALSE}
+print( paste( length(unique(prot_Set1$HGNC_Symbol) ), "proteins detected in Set 1." ))
+print( paste( length(unique(prot_Set2$HGNC_Symbol) ), "proteins detected in Set 2." ))
+
+print( paste( length(unique(prot_top3peptidemedian$HGNC_Symbol) ), "proteins detected in both Sets." ))
+```
+
+## Distributions
+### pY Abundances
+#### Set 1
+```{r}
+pY_Set1 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Raw abundances")
+
+pY_Set1 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Abundances normalised to sup")
+
+pY_Set1 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+pY_Set1 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+
+pY_Set1 %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to bridge")
+```
+
+#### Set 2
+```{r}
+pY_Set2 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Raw abundances")
+
+pY_Set2 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Abundances normalised to sup")
+
+pY_Set2 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+pY_Set2 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+
+pY_Set2 %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to bridge")
+```
+
+#### Set 3
+```{r}
+pY_Set3 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Raw abundances")
+
+pY_Set3 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Abundances normalised to sup")
+
+pY_Set3 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+pY_Set3 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+
+pY_Set3 %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to bridge")
+```
+
+#### Combined
+```{r}
+pY_noNA %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_"), drop = F) %>%
+  separate( Sample , into = c("xenograft", "treatment", "day", "replicate", "set"), sep = "_", remove = F) %>%
+  ggplot(aes(value, fill= treatment, group = Sample)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to normal") +
+  theme_bw() +
+  scale_fill_manual(values = PGPalette[c(1, 2, 4, 5)])
+
+pY_noNA %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_")) %>%
+  separate( Sample , into = c( "xenograft", "treatment", "day", "replicate", "set"), sep = "_", remove = F) %>%
+  ggplot(aes(Sample, value, fill= treatment)) +
+  geom_boxplot() +
+  ggtitle("log2FC to normal") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_fill_manual(values = PGPalette[c(1, 2, 4, 5)])
+
+```
+
+### pST Abundances
+#### Set 1
+```{r, eval=FALSE}
+pST_Set1 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Raw abundances")
+
+pST_Set1 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Abundances normalised to sup")
+
+pST_Set1 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+pST_Set1 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+
+pST_Set1 %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to bridge")
+```
+
+#### Set 2
+```{r, eval=FALSE}
+pST_Set2 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Raw abundances")
+
+pST_Set2 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Abundances normalised to sup")
+
+pST_Set2 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+pST_Set2 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+
+pST_Set2 %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to bridge")
+```
+
+#### Combined
+```{r, eval=FALSE}
+pST_noNA %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_")) %>%
+  separate(Sample, into = c("treatment", "replicate"), remove = F) %>%
+  ggplot(aes(value, fill= treatment, group = Sample)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to normal") +
+  theme_bw() +
+  scale_fill_manual(values = PGPalette[c(1, 2, 4, 5)]) +
+  geom_vline(xintercept = 0)
+
+pST_noNA %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_")) %>%
+  separate(Sample, into = c("treatment", "replicate"), remove = F) %>%
+  ggplot(aes(Sample, value, fill= treatment)) +
+  geom_boxplot() +
+  ggtitle("log2FC to bridge") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_fill_manual(values = PGPalette[c(1, 2, 4, 5)])
+
+pST_noNA %>%
+  select(contains("log2FC")) %>%
+  select(!contains("normal")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_")) %>%
+  separate(Sample, into = c("treatment", "replicate"), remove = F) %>%
+  ggplot(aes(value, fill= treatment, group = Sample)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to normal") +
+  theme_bw() +
+  scale_fill_manual(values = PGPalette[c(1, 2, 5)])
+```
+
+### Whole proteome abundances
+#### Set 1
+```{r, eval=FALSE}
+prot_Set1 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e5) +
+  ggtitle("Raw abundances")
+
+prot_Set1 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10) +
+  ggtitle("Abundances normalised to sup")
+
+prot_Set1 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+prot_Set1 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+
+prot_Set1 %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to bridge")
+```
+
+#### Set 2
+```{r, eval=FALSE}
+prot_Set2 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e5) +
+  ggtitle("Raw abundances")
+
+prot_Set2 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10) +
+  ggtitle("Abundances normalised to sup")
+
+prot_Set2 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Raw abundances")
+
+prot_Set2 %>%
+  select(contains("TMTNorm_Abundance")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  scale_x_log10() +
+  ggtitle("Abundances normalised to sup")
+
+prot_Set2 %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to bridge")
+```
+
+#### Combined
+```{r, eval=FALSE}
+prot_top3peptidemedian %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to normal")
+
+prot_top3peptidemedian %>%
+  select(contains("log2FC")) %>%
+  select(!contains("normal")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_")) %>%
+  separate(Sample, into = c("treatment", "replicate"), remove = F) %>%
+  ggplot(aes(value, fill= treatment, group = Sample)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to normal") +
+  theme_bw() +
+  scale_fill_manual(values = PGPalette[c(1, 2, 5)])
+
+t(pST_mat_nonormal) %>%
+  as.data.frame(  ) %>%
+  rownames_to_column( "peptide") %>%
+  pivot_longer(-peptide, names_to = "sample", values_to = "log2FC") %>%
+  mutate(sample = gsub( "log2FC_", "", sample)) %>%
+  separate(sample, into = c("treatment", "replicate"), sep = "-",remove = F)   %>%
+  separate(peptide, into = c("HGNC_Symbol", "Annotated_Sequence"), sep =   "_", remove = F ) %>%
+  group_by(sample, treatment, replicate) %>%
+  summarise("Mean of patient" = mean(log2FC)) %>%
+  ungroup() %>%
+  mutate(treatment = as.factor(treatment)) %>%
+  mutate(treatment = factor(treatment, levels = c("WT", "G34R", "K27M"))) %>%
+  ggplot(aes( treatment, `Mean of patient`, fill = treatment )) +
+  geom_boxplot(outlier.size = 0) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90),
+  axis.title.x = element_blank()) +
+  scale_fill_manual(values = PGPalette[c(5,1,2)]) +
+  ggbeeswarm::geom_beeswarm() +
+  ggpubr::stat_compare_means(method = "t.test",
+  comparisons = list(c("WT", "G34R"),
+  c("WT", "K27M"),
+  c("K27M", "G34R")) ) +
+  ggtitle("pST median normalised log2 fold change")
+
+```
+
+### pY Mean-Variance Relationship
+#### Set 1
+```{r}
+pY_Set1 %>%
+  mutate(peptide = paste0( HGNC_Symbol, "_", `Annotated Sequence` )) %>%
+  select(peptide, contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = -peptide) %>%
+  group_by(peptide) %>%
+  summarise(mean = mean(value), sd = sd (value) ) %>%
+  ggplot(aes(mean, sd)) +
+  xlim(0,10e4) +
+  ylim(0,10e4) +
+  #geom_histogram(bins= 200) +
+  geom_point() +
+  ggtitle("pY sd vs. mean") +
+  ggpubr::stat_cor()+
+  geom_smooth(method = "lm")
+
+pY_Set1 %>%
+  mutate(peptide = paste0( HGNC_Symbol, "_", `Annotated Sequence` )) %>%
+  select(peptide, contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = -peptide) %>%
+  mutate(log2value = log2(value) ) %>%
+  group_by(peptide) %>%
+  summarise(meanlog2 = mean(log2value), sdlog2 = sd (log2value) ) %>%
+  ggplot(aes(meanlog2, sdlog2)) +
+  #ylim(0,10e4) +
+  #scale_x_log10() +
+  #geom_histogram(bins= 200) +
+  geom_point() +
+  ggtitle("pY sd vs. mean") +
+  ggpubr::stat_cor()+
+  geom_smooth(method = "lm")
+```
+
+#### Set 2
+```{r}
+pY_Set2 %>%
+  mutate(peptide = paste0( HGNC_Symbol, "_", `Annotated Sequence` )) %>%
+  select(peptide, contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = -peptide) %>%
+  group_by(peptide) %>%
+  summarise(mean = mean(value), sd = sd (value) ) %>%
+  ggplot(aes(mean, sd)) +
+  xlim(0,10e4) +
+  ylim(0,10e4) +
+  #geom_histogram(bins= 200) +
+  geom_point() +
+  ggtitle("pY sd vs. mean") +
+  ggpubr::stat_cor()+
+  geom_smooth(method = "lm")
+
+pY_Set2 %>%
+  mutate(peptide = paste0( HGNC_Symbol, "_", `Annotated Sequence` )) %>%
+  select(peptide, contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = -peptide) %>%
+  mutate(log2value = log2(value) ) %>%
+  group_by(peptide) %>%
+  summarise(meanlog2 = mean(log2value), sdlog2 = sd (log2value) ) %>%
+  ggplot(aes(meanlog2, sdlog2)) +
+  #ylim(0,10e4) +
+  #scale_x_log10() +
+  #geom_histogram(bins= 200) +
+  geom_point() +
+  ggtitle("pY sd vs. mean") +
+  ggpubr::stat_cor()+
+  geom_smooth(method = "lm")
+```
+
+#### Set 3
+```{r}
+pY_Set3 %>%
+  mutate(peptide = paste0( HGNC_Symbol, "_", `Annotated Sequence` )) %>%
+  select(peptide, contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = -peptide) %>%
+  group_by(peptide) %>%
+  summarise(mean = mean(value), sd = sd (value) ) %>%
+  ggplot(aes(mean, sd)) +
+  xlim(0,10e4) +
+  ylim(0,10e4) +
+  #geom_histogram(bins= 200) +
+  geom_point() +
+  ggtitle("pY sd vs. mean") +
+  ggpubr::stat_cor()+
+  geom_smooth(method = "lm")
+
+pY_Set3 %>%
+  mutate(peptide = paste0( HGNC_Symbol, "_", `Annotated Sequence` )) %>%
+  select(peptide, contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = -peptide) %>%
+  mutate(log2value = log2(value) ) %>%
+  group_by(peptide) %>%
+  summarise(meanlog2 = mean(log2value), sdlog2 = sd (log2value) ) %>%
+  ggplot(aes(meanlog2, sdlog2)) +
+  #ylim(0,10e4) +
+  #scale_x_log10() +
+  #geom_histogram(bins= 200) +
+  geom_point() +
+  ggtitle("pY sd vs. mean") +
+  ggpubr::stat_cor()+
+  geom_smooth(method = "lm")
+```
+
+### pY Abundances per peptide
+#### Set 1
+```{r}
+pY_Set1 %>%
+  select(contains("Abundance"), -contains("TMT")) %>%
+  pivot_longer(names_to = "Channel", cols = everything()) %>%
+  ggplot(aes(value, fill= Channel)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  xlim(0,10e4) +
+  ggtitle("Raw abundances")
+```
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```
