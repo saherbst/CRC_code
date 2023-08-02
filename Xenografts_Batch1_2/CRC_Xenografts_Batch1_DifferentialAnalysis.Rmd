@@ -1,0 +1,600 @@
+---
+title: "Differential phospho/protein analysis - CRC Batch 1"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+DIPG_FirstBatch_DataProcessing Script
+
+```{r}
+load("../Data/Cache/Xenografts_Batch1_2_DataProcessing.RData")
+```
+
+# TODO
+
+* Do differential abudance analysis for prep batch and mass spec run
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+source("../../../General/Code/Analysis_Functions.R")
+source("CRC_Xenografts_Batch1_Functions.R")
+```
+
+# Analysis
+## DEP
+### Tyrosine all
+#### Each condition vs ctrl
+```{r, eval=TRUE}
+data_diff_ctrl_vs_E_pY <- test_diff(pY_se, type="manual", test = "E_vs_ctrl")
+dep_ctrl_vs_E_pY <- add_rejections_SH(data_diff_ctrl_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_ctrl_vs_E_pY, contrast = "E_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY") )
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_ctrl_vs_E_pY, comparison = "E_vs_ctrl_diff")
+```
+
+```{r}
+data_diff_EC_vs_ctrl_pY <- test_diff(pY_se, type="manual", test = "EC_vs_ctrl")
+dep_EC_vs_ctrl_pY <- add_rejections_SH(data_diff_EC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_ctrl_pY, contrast = "EC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY") )
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_EBC_vs_ctrl_pY <- test_diff(pY_se, type="manual", test = "EBC_vs_ctrl")
+dep_EBC_vs_ctrl_pY <- add_rejections_SH(data_diff_EBC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_ctrl_pY, contrast = "EBC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff")
+```
+
+
+#### Not ctrl vs ctrl
+```{r, eval=FALSE}
+data_diff_vs_ctrl_pY <- test_diff_to_all_other(pY_se, control = "ctrl")
+dep_vs_ctrl_pY <- add_rejections_SH(data_diff_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_vs_ctrl_pY, contrast = "not_ctrl_vs_ctrl", label_size = 2, add_names = TRUE, additional_title = "pY") )
+```
+
+```{r, fig.width=10, fig.height=10, eval=FALSE}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_vs_ctrl_pY, comparison = "not_ctrl_vs_ctrl_diff")
+```
+
+#### EC vs E
+```{r}
+data_diff_EC_vs_E_pY <- test_diff(pY_se, type = "manual", 
+                              test = c("EC_vs_E"))
+dep_EC_vs_E_pY <- add_rejections_SH(data_diff_EC_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_E_pY, contrast = "EC_vs_E", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_E_pY, comparison = "EC_vs_E_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### EBC vs EC
+```{r}
+data_diff_EBC_vs_EC_pY <- test_diff(pY_se, type = "manual", 
+                              test = c("EBC_vs_EC"))
+dep_EBC_vs_EC_pY <- add_rejections_SH(data_diff_EBC_vs_EC_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_EC_pY, contrast = "EBC_vs_EC", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### Preps
+```{r}
+pY_se_preps <- pY_se
+
+pY_se_preps$treatment <- pY_se_preps$condition
+pY_se_preps$prep <- unlist(prep_l[paste0("Xenograft_", rownames(colData(pY_se_preps)) )])
+pY_se_preps_comp <- pY_se_preps
+pY_se_preps_comp$condition <- pY_se_preps$prep
+
+data_diff_prep1_vs_prep2_pY <- test_diff(pY_se_preps_comp, type = "manual", 
+                              test = c("prep1_vs_prep2"))
+dep_prep1_vs_prep2_pY <- add_rejections_SH(data_diff_prep1_vs_prep2_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_prep1_vs_prep2_pY, contrast = "prep1_vs_prep2", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_prep1_vs_prep2_pY, comparison = "prep1_vs_prep2_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### Runs
+```{r}
+pY_se_runs <- pY_se
+
+pY_se_runs$treatment <- pY_se_runs$condition
+pY_se_runs$run <- str_split(colnames(pY_se_runs), pattern = "_", simplify = TRUE)[,4]
+pY_se_runs_comp <- pY_se_runs
+pY_se_runs_comp$condition <- pY_se_runs$run
+
+data_diff_Set1_vs_Set2_pY <- test_diff(pY_se_runs_comp, type = "manual", 
+                              test = c("Set1_vs_Set2"))
+dep_Set1_vs_Set2_pY <- add_rejections_SH(data_diff_Set1_vs_Set2_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_Set1_vs_Set2_pY, contrast = "Set1_vs_Set2", label_size = 2, add_names = TRUE, additional_title = "pY") )
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_Set1_vs_Set2_pY, comparison = "Set1_vs_Set2_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+
+### Prep 1
+#### Each condition vs ctrl 
+```{r, eval=TRUE}
+pY_se_prep1 <- pY_se_preps
+pY_se_prep1 <- pY_se_prep1[,pY_se_prep1$prep == "prep1" ]
+data_diff_ctrl_vs_E_pY <- test_diff(pY_se_prep1, type="manual", test = "E_vs_ctrl")
+dep_ctrl_vs_E_pY <- add_rejections_SH(data_diff_ctrl_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_ctrl_vs_E_pY, contrast = "E_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+paste0("log2FC_Xenograft_", colnames(pY_se_prep1) )
+
+str_remove( colnames(pY_noNA), "log2FC_Xenograft_" )
+pY_noNA %>% select()
+Return_DEP_Hits_Plots(data = pY_noNA , 
+                      dep_ctrl_vs_E_pY, 
+                      comparison = "E_vs_ctrl_diff")
+
+Return_DEP_Hits_Plots(data = pY_noNA , 
+                      dep_ctrl_vs_E_pY, 
+                      comparison = "E_vs_ctrl_diff")
+```
+
+```{r}
+data_diff_EC_vs_ctrl_pY <- test_diff(pY_se_prep1, type="manual", test = "EC_vs_ctrl")
+dep_EC_vs_ctrl_pY <- add_rejections_SH(data_diff_EC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_ctrl_pY, contrast = "EC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_EBC_vs_ctrl_pY <- test_diff(pY_se_prep1, type="manual", test = "EBC_vs_ctrl")
+dep_EBC_vs_ctrl_pY <- add_rejections_SH(data_diff_EBC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_ctrl_pY, contrast = "EBC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff")
+```
+
+#### EC vs E
+```{r}
+data_diff_EC_vs_E_pY <- test_diff(pY_se_prep1, type = "manual", 
+                              test = c("EC_vs_E"))
+dep_EC_vs_E_pY <- add_rejections_SH(data_diff_EC_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_E_pY, contrast = "EC_vs_E", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_E_pY, comparison = "EC_vs_E_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### EBC vs EC
+```{r}
+data_diff_EBC_vs_EC_pY <- test_diff(pY_se_prep1, type = "manual", 
+                              test = c("EBC_vs_EC"))
+dep_EBC_vs_EC_pY <- add_rejections_SH(data_diff_EBC_vs_EC_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_EC_pY, contrast = "EBC_vs_EC", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+### Prep 2
+#### Each condition vs ctrl
+```{r, eval=TRUE}
+pY_se_prep2 <- pY_se_preps
+pY_se_prep2 <- pY_se_prep2[,pY_se_prep2$prep == "prep2" ]
+data_diff_ctrl_vs_E_pY <- test_diff(pY_se_prep2, type="manual", test = "E_vs_ctrl")
+dep_ctrl_vs_E_pY <- add_rejections_SH(data_diff_ctrl_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_ctrl_vs_E_pY, contrast = "E_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+paste0("log2FC_Xenograft_", colnames(pY_se_prep2) )
+
+str_remove( colnames(pY_noNA), "log2FC_Xenograft_" )
+pY_noNA %>% select()
+Return_DEP_Hits_Plots(data = pY_noNA , 
+                      dep_ctrl_vs_E_pY, 
+                      comparison = "E_vs_ctrl_diff")
+
+Return_DEP_Hits_Plots(data = pY_noNA , 
+                      dep_ctrl_vs_E_pY, 
+                      comparison = "E_vs_ctrl_diff")
+```
+
+```{r}
+data_diff_EC_vs_ctrl_pY <- test_diff(pY_se_prep2, type="manual", test = "EC_vs_ctrl")
+dep_EC_vs_ctrl_pY <- add_rejections_SH(data_diff_EC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_ctrl_pY, contrast = "EC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_EBC_vs_ctrl_pY <- test_diff(pY_se_prep2, type="manual", test = "EBC_vs_ctrl")
+dep_EBC_vs_ctrl_pY <- add_rejections_SH(data_diff_EBC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_ctrl_pY, contrast = "EBC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff")
+```
+
+#### EC vs E
+```{r}
+data_diff_EC_vs_E_pY <- test_diff(pY_se_prep2, type = "manual", 
+                              test = c("EC_vs_E"))
+dep_EC_vs_E_pY <- add_rejections_SH(data_diff_EC_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_E_pY, contrast = "EC_vs_E", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_E_pY, comparison = "EC_vs_E_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### EBC vs EC
+```{r}
+data_diff_EBC_vs_EC_pY <- test_diff(pY_se_prep2, type = "manual", 
+                              test = c("EBC_vs_EC"))
+dep_EBC_vs_EC_pY <- add_rejections_SH(data_diff_EBC_vs_EC_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_EC_pY, contrast = "EBC_vs_EC", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+
+### Tyrosine 24h
+#### Each condition vs ctrl
+```{r, eval=TRUE}
+pY_se_24h <- pY_se
+
+pY_se_24h <- pY_se_24h[,pY_se_24h$day == "24h" | (pY_se_24h$day == "5d" & pY_se_24h$condition == "ctrl")]
+
+data_diff_ctrl_vs_E_pY <- test_diff(pY_se_24h, type="manual", test = "E_vs_ctrl")
+dep_ctrl_vs_E_pY <- add_rejections_SH(data_diff_ctrl_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_ctrl_vs_E_pY, contrast = "E_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_ctrl_vs_E_pY, comparison = "E_vs_ctrl_diff")
+```
+
+```{r}
+data_diff_EC_vs_ctrl_pY <- test_diff(pY_se_24h, type="manual", test = "EC_vs_ctrl")
+dep_EC_vs_ctrl_pY <- add_rejections_SH(data_diff_EC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_ctrl_pY, contrast = "EC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_EBC_vs_ctrl_pY <- test_diff(pY_se_24h, type="manual", test = "EBC_vs_ctrl")
+dep_EBC_vs_ctrl_pY <- add_rejections_SH(data_diff_EBC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_ctrl_pY, contrast = "EBC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff")
+```
+
+
+#### Not ctrl vs ctrl
+```{r, eval=FALSE}
+data_diff_vs_ctrl_pY <- test_diff_to_all_other(pY_se_24h, control = "ctrl")
+dep_vs_ctrl_pY <- add_rejections_SH(data_diff_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_vs_ctrl_pY, contrast = "not_ctrl_vs_ctrl", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10, eval=FALSE}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_vs_ctrl_pY, comparison = "not_ctrl_vs_ctrl_diff")
+```
+
+#### EC vs E
+```{r}
+data_diff_EC_vs_E_pY <- test_diff(pY_se_24h, type = "manual", 
+                              test = c("EC_vs_E"))
+dep_EC_vs_E_pY <- add_rejections_SH(data_diff_EC_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_E_pY, contrast = "EC_vs_E", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_E_pY, comparison = "EC_vs_E_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### EBC vs EC
+```{r}
+data_diff_EBC_vs_EC_pY <- test_diff(pY_se_24h, type = "manual", 
+                              test = c("EBC_vs_EC"))
+dep_EBC_vs_EC_pY <- add_rejections_SH(data_diff_EBC_vs_EC_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_EC_pY, contrast = "EBC_vs_EC", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### Preps
+```{r}
+pY_se_24h_preps <- pY_se_24h
+
+pY_se_24h_preps$treatment <- pY_se_24h_preps$condition
+pY_se_24h_preps$prep <- unlist(prep_l[paste0("Xenograft_", rownames(colData(pY_se_24h_preps)) )])
+pY_se_24h_preps_comp <- pY_se_24h_preps
+pY_se_24h_preps_comp$condition <- pY_se_24h_preps$prep
+
+data_diff_prep1_vs_prep2_pY <- test_diff(pY_se_24h_preps_comp, type = "manual", 
+                              test = c("prep1_vs_prep2"))
+dep_prep1_vs_prep2_pY <- add_rejections_SH(data_diff_prep1_vs_prep2_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_prep1_vs_prep2_pY, contrast = "prep1_vs_prep2", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_prep1_vs_prep2_pY, comparison = "prep1_vs_prep2_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### Runs
+```{r}
+pY_se_24h_runs <- pY_se_24h
+
+pY_se_24h_runs$treatment <- pY_se_24h_runs$condition
+pY_se_24h_runs$run <- str_split(colnames(pY_se_24h_runs), pattern = "_", simplify = TRUE)[,4]
+pY_se_24h_runs_comp <- pY_se_24h_runs
+pY_se_24h_runs_comp$condition <- pY_se_24h_runs$run
+
+data_diff_Set1_vs_Set2_pY <- test_diff(pY_se_24h_runs_comp, type = "manual", 
+                              test = c("Set1_vs_Set2"))
+dep_Set1_vs_Set2_pY <- add_rejections_SH(data_diff_Set1_vs_Set2_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_Set1_vs_Set2_pY, contrast = "Set1_vs_Set2", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_Set1_vs_Set2_pY, comparison = "Set1_vs_Set2_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+
+### Tyrosine 5d
+#### Each condition vs ctrl
+```{r, eval=TRUE}
+pY_se_5d <- pY_se
+
+pY_se_5d <- pY_se_5d[,pY_se_5d$day == "5d" ]
+
+data_diff_ctrl_vs_E_pY <- test_diff(pY_se_5d, type="manual", test = "E_vs_ctrl")
+dep_ctrl_vs_E_pY <- add_rejections_SH(data_diff_ctrl_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_ctrl_vs_E_pY, contrast = "E_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_ctrl_vs_E_pY, comparison = "E_vs_ctrl_diff")
+```
+
+```{r}
+data_diff_EC_vs_ctrl_pY <- test_diff(pY_se_5d, type="manual", test = "EC_vs_ctrl")
+dep_EC_vs_ctrl_pY <- add_rejections_SH(data_diff_EC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_ctrl_pY, contrast = "EC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_EBC_vs_ctrl_pY <- test_diff(pY_se_5d, type="manual", test = "EBC_vs_ctrl")
+dep_EBC_vs_ctrl_pY <- add_rejections_SH(data_diff_EBC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_ctrl_pY, contrast = "EBC_vs_ctrl", 
+                label_size = 2, add_names = TRUE,
+                additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff")
+```
+
+
+#### Not ctrl vs ctrl
+```{r, eval=FALSE}
+data_diff_vs_ctrl_pY <- test_diff_to_all_other(pY_se_5d, control = "ctrl")
+dep_vs_ctrl_pY <- add_rejections_SH(data_diff_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_vs_ctrl_pY, contrast = "not_ctrl_vs_ctrl", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10, eval=FALSE}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_vs_ctrl_pY, comparison = "not_ctrl_vs_ctrl_diff")
+```
+
+#### EC vs E
+```{r}
+data_diff_EC_vs_E_pY <- test_diff(pY_se_5d, type = "manual", 
+                              test = c("EC_vs_E"))
+dep_EC_vs_E_pY <- add_rejections_SH(data_diff_EC_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EC_vs_E_pY, contrast = "EC_vs_E", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EC_vs_E_pY, comparison = "EC_vs_E_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### EBC vs EC
+```{r}
+data_diff_EBC_vs_EC_pY <- test_diff(pY_se_5d, type = "manual", 
+                              test = c("EBC_vs_EC"))
+dep_EBC_vs_EC_pY <- add_rejections_SH(data_diff_EBC_vs_EC_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_EBC_vs_EC_pY, contrast = "EBC_vs_EC", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### Preps
+```{r}
+pY_se_5d_preps <- pY_se_5d
+
+pY_se_5d_preps$treatment <- pY_se_5d_preps$condition
+pY_se_5d_preps$prep <- unlist(prep_l[paste0("Xenograft_", rownames(colData(pY_se_5d_preps)) )])
+pY_se_5d_preps_comp <- pY_se_5d_preps
+pY_se_5d_preps_comp$condition <- pY_se_5d_preps$prep
+
+data_diff_prep1_vs_prep2_pY <- test_diff(pY_se_5d_preps_comp, type = "manual", 
+                              test = c("prep1_vs_prep2"))
+dep_prep1_vs_prep2_pY <- add_rejections_SH(data_diff_prep1_vs_prep2_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_prep1_vs_prep2_pY, contrast = "prep1_vs_prep2", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_prep1_vs_prep2_pY, comparison = "prep1_vs_prep2_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### Runs
+```{r}
+pY_se_5d_runs <- pY_se_5d
+
+pY_se_5d_runs$treatment <- pY_se_5d_runs$condition
+pY_se_5d_runs$run <- str_split(colnames(pY_se_5d_runs), pattern = "_", simplify = TRUE)[,4]
+pY_se_5d_runs_comp <- pY_se_5d_runs
+pY_se_5d_runs_comp$condition <- pY_se_5d_runs$run
+
+data_diff_Set1_vs_Set2_pY <- test_diff(pY_se_5d_runs_comp, type = "manual", 
+                              test = c("Set1_vs_Set2"))
+dep_Set1_vs_Set2_pY <- add_rejections_SH(data_diff_Set1_vs_Set2_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Wrapper_Volcano(plot_volcano_SH(dep_Set1_vs_Set2_pY, contrast = "Set1_vs_Set2", label_size = 2, add_names = TRUE, additional_title = "pY"))
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_noNA, dep_Set1_vs_Set2_pY, comparison = "Set1_vs_Set2_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

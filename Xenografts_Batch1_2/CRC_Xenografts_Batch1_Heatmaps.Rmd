@@ -1,0 +1,131 @@
+---
+title: "Heatmaps - CRC Batch 1"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+DIPG_FirstBatch_DataProcessing Script
+
+```{r}
+load("../Data/Cache/Xenografts_Batch1_2_DataProcessing.RData")
+```
+
+# TODO
+
+* Annotated sample prep batch in heatmap
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+source("../../../General/Code/Analysis_Functions.R")
+source("CRC_Xenografts_Batch1_Functions.R")
+```
+
+## Median center correct extreme values
+```{r, eval=FALSE}
+#pY_mat_normtomedian <- t(log2(t(2^pY_mat)/colMedians(2^pY_mat) ))
+pY_mat_normtomedian[pY_mat_normtomedian >4] <- 4
+pY_mat_normtomedian[pY_mat_normtomedian < (-4)] <- (-4)
+
+#pST_mat_normtomedian <- t(log2(t(2^pST_mat)/colMedians(2^pST_mat) ))
+pST_mat_normtomedian[pST_mat_normtomedian >4] <- 4
+pST_mat_normtomedian[pST_mat_normtomedian < (-4)] <- (-4)
+
+#prot_mat_normtomedian <- t(log2(t(2^prot_mat)/colMedians(2^prot_mat) ))
+prot_mat_normtomedian[prot_mat_normtomedian >5.6] <- 5.6
+prot_mat_normtomedian[prot_mat_normtomedian < (-5.6)] <- (-5.6)
+```
+
+# Analysis
+## Heatmaps log2 fold change normalised to ctrl
+### Phospho-Tyrosines 
+#### Clustered
+```{r, fig.height=8, fig.width=10}
+pY_mat_normtomedian %>% 
+  pheatmap::pheatmap(col = colorRampPalette(c("navy", "white", "firebrick3"))(50), 
+                     #labels_col = sub("_.*", "", colnames( pY_mat_normtomedian )), 
+                     show_colnames = FALSE,
+                     #scale = "column"  
+                     )
+```
+
+### Phospho-Serines/Threonines 
+#### All samples
+```{r, fig.height=8, fig.width=10, eval=FALSE}
+pST_mat_normtomedian %>% 
+  pheatmap::pheatmap(col = colorRampPalette(c("navy", "white", "firebrick3"))(50), 
+                     #labels_col = sub("_.*", "", colnames( pST_mat_normtomedian )), 
+                     show_colnames = FALSE,
+                     #scale = "column"   
+                     )
+```
+
+### Whole proteome
+#### Clustered
+```{r, fig.height=8, fig.width=10, eval=FALSE}
+prot_mat_normtomedian %>% 
+  pheatmap::pheatmap(col = colorRampPalette(c("navy", "white", "firebrick3"))(50), 
+                     #labels_col = sub("_.*", "", colnames( pST_mat_normtomedian )), 
+                     show_colnames = FALSE,
+                     #scale = "column"   
+                     )
+```
+
+## With missing values
+```{r}
+pY_NAs %>%
+  mutate(namepep= paste0(HGNC_Symbol, "_", `Annotated Sequence`)) %>%
+  select(-c("Sequence", "Annotated Sequence", "Master Protein Accessions", "Master Protein Descriptions", "HGNC_Symbol") ) %>% 
+  pivot_longer(-namepep, names_to = "sample") %>%
+  mutate(log2value = log2(value)) %>%
+  ggplot(aes(sample, namepep, fill = log2value)) +
+  geom_tile() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_fill_continuous(type = "viridis")
+```
+
+```{r, eval=FALSE}
+pST_NAs %>%
+  mutate(namepep= paste0(HGNC_Symbol, "_", `Annotated Sequence`)) %>%
+  select(-c("Sequence", "Annotated Sequence", "Master Protein Accessions", "Master Protein Descriptions", "HGNC_Symbol") ) %>% 
+  pivot_longer(-namepep, names_to = "sample") %>%
+  mutate(log2value = log2(value)) %>%
+  ggplot(aes(sample, namepep, fill = log2value)) +
+  geom_tile() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_fill_continuous(type = "viridis")
+```
+
+```{r}
+pY_NAs %>%
+  filter(HGNC_Symbol=="EGFR") 
+
+pY_NAs %>% filter(HGNC_Symbol == "PDGFRA")
+pY_NAs %>% filter(HGNC_Symbol == "PDGFRB")
+
+#pST_NAs %>%
+#  filter(HGNC_Symbol=="EGFR")
+```
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```
