@@ -1,0 +1,191 @@
+---
+title: "k-means - CRC Batch 2 Set 4"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+CRC_Xenografts_Batch2_DataProcessing Script
+
+```{r}
+load("../Data/Cache/Xenografts_Batch2_DataProcessing.RData")
+set.seed(2023)
+```
+
+# Setup
+## Load libraries
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+#library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+#library(kohonen) # SOMs package
+library(factoextra)
+library(cluster)
+```
+
+## Functions
+### General
+```{r}
+source("../../../General/Code/Analysis_Functions.R")
+source("CRC_Xenografts_Batch2_Functions.R")
+```
+
+
+# k-means Peptide - pY
+## Format data
+```{r}
+mat_kmean_pY <- 
+  pY_Set4_form %>% 
+  mutate(peptide = paste0(HGNC_Symbol, "_", Annotated_Sequence) ) %>% 
+  column_to_rownames("peptide") %>% 
+  select(all_of(contains("log2FC"))) %>%
+  as.matrix()
+
+kmeans_tb_pY <- 
+  pY_Set4_form %>% 
+  select(HGNC_Symbol, Annotated_Sequence, all_of(contains("log2FC"))) %>%
+  pivot_longer(contains("log2FC"), names_to = "sample", values_to = "log2FC") %>%
+  separate(col = sample, sep = "_", 
+           into = c("remove", "xenograft", "treatment", 
+                    "timepoint", "replicate", "set" ), remove = F ) %>%
+  mutate(peptide = paste0(HGNC_Symbol, "_", Annotated_Sequence) )
+```
+
+
+## Find optimal number of clusters
+
+```{r}
+KMeans_Find_Nr_Clusters_elbow(mat_kmean_pY, c_max = 30)
+```
+
+## Perform k-means
+
+```{r}
+pST_kmeans = kmeans(mat_kmean_pY, centers = 6, nstart = 200, iter.max = 10)
+cluster_df_pY <-  tibble("cluster" = pST_kmeans$cluster)
+cluster_df_pY$peptide <- names(pST_kmeans$cluster)
+kmeans_tb_pY <- left_join(kmeans_tb_pY, cluster_df_pY)
+```
+
+
+## Plot profiles
+```{r, fig.width=10, fig.height=12}
+kmeans_tb_pY %>%
+  ggplot(aes(sample, log2FC, group = Annotated_Sequence)) +
+  geom_line(alpha = 0.2) +
+  geom_point(aes(color = treatment), size = 0.2) +
+  facet_wrap(~cluster) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_color_manual(values = PGPalette[c(1,2,4,5)])
+```
+
+## Print clusters
+```{r}
+DT::datatable( filter="top", kmeans_tb_pY %>% 
+                  select(HGNC_Symbol, Annotated_Sequence, cluster) %>%
+                  unique)
+```
+
+## StringDB clusters
+```{r, fig.height=8, fig.width=8, dpi=150}
+message("Cluster 1")
+Plot_StringDB(kmeans_tb_pY %>% 
+                select(HGNC_Symbol, Annotated_Sequence, cluster) %>% 
+                filter(cluster == 1) %>% 
+                select(HGNC_Symbol) %>% unique())
+message("Cluster 2")
+Plot_StringDB(kmeans_tb_pY %>% 
+                select(HGNC_Symbol, Annotated_Sequence, cluster) %>% 
+                filter(cluster == 2) %>% 
+                select(HGNC_Symbol) %>% unique())
+message("Cluster 3")
+Plot_StringDB(kmeans_tb_pY %>% 
+                select(HGNC_Symbol, Annotated_Sequence, cluster) %>% 
+                filter(cluster == 3) %>% 
+                select(HGNC_Symbol) %>% unique())
+message("Cluster 6")
+Plot_StringDB(kmeans_tb_pY %>% 
+                select(HGNC_Symbol, Annotated_Sequence, cluster) %>% 
+                filter(cluster == 6) %>% 
+                select(HGNC_Symbol) %>% unique())
+```
+
+
+# k-means Peptide - pST
+## Format data
+```{r}
+mat_kmean_pST <- 
+  pST_Set4_form %>% 
+  mutate(peptide = paste0(HGNC_Symbol, "_", Annotated_Sequence) ) %>% 
+  column_to_rownames("peptide") %>% 
+  select(all_of(contains("log2FC"))) %>%
+  as.matrix()
+
+kmeans_tb_pST <- 
+  pST_Set4_form %>% 
+  select(HGNC_Symbol, Annotated_Sequence, all_of(contains("log2FC"))) %>%
+  pivot_longer(contains("log2FC"), names_to = "sample", values_to = "log2FC") %>%
+  separate(col = sample, sep = "_", 
+           into = c("remove", "xenograft", "treatment", 
+                    "timepoint", "replicate", "set" ), remove = F ) %>%
+  mutate(peptide = paste0(HGNC_Symbol, "_", Annotated_Sequence) )
+```
+
+
+## Find optimal number of clusters
+
+```{r}
+KMeans_Find_Nr_Clusters_elbow(mat_kmean_pST, c_max = 30)
+```
+
+## Perform k-means
+
+```{r}
+pST_kmeans = kmeans(mat_kmean_pST, centers = 9, nstart = 200, iter.max = 10)
+cluster_df_pST <-  tibble("cluster" = pST_kmeans$cluster)
+cluster_df_pST$peptide <- names(pST_kmeans$cluster)
+kmeans_tb_pST <- 
+  left_join(kmeans_tb_pST, cluster_df_pST)
+```
+
+
+## Plot profiles
+```{r, fig.width=10, fig.height=10}
+kmeans_tb_pST %>%
+  ggplot(aes(sample, log2FC, group = Annotated_Sequence)) +
+  geom_line(alpha = 0.2) +
+  geom_point(aes(color = treatment), size = 0.2) +
+  facet_wrap(~cluster, ncol = 3) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_color_manual(values = PGPalette[c(1,2,4,5)])
+```
+
+## Print clusters
+```{r}
+DT::datatable( filter="top", kmeans_tb_pST %>% 
+                  select(HGNC_Symbol, Annotated_Sequence, cluster) %>%
+                  unique)
+```
+
+
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

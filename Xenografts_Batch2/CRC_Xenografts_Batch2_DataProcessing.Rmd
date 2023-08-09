@@ -14,6 +14,9 @@ Analysis date: `r Sys.Date()`
 
 CRC Xenografts # 1 and #14
 
+# TODO
+Individual sets: Do not normalise to bridge.
+
 # Setup
 ## Load libraries and functions
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
@@ -105,6 +108,7 @@ file_path_sup_Set5pY <- "../Data/Mass_Spec/SH_20230801_CRC_Xenografts_Batch2_Set
 ```{r, message=TRUE, warning=FALSE}
 # Set 1
 pY_Set1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set1,  
+                                   #perculator_qvalue = FALSE,
                               file_path_sup = file_path_sup_Set1,
                               return_data = "phos", 
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
@@ -117,6 +121,8 @@ pY_Set1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set1,
 pY_Set3 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set3,  
                               file_path_sup = file_path_sup_Set3,
                               return_data = "phos", 
+                              perculator_qvalue = FALSE,
+                              ptmRS_score_filter = FALSE,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
@@ -190,6 +196,8 @@ pST_Set3 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set3,
 pST_Set4 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set4,  
                               file_path_sup = file_path_sup_Set4,
                               return_data = "phos", 
+                              perculator_qvalue = FALSE,
+                              ptmRS_score_filter = FALSE,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
@@ -198,7 +206,7 @@ pST_Set4 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set4,
 
 # Set 5
 pST_Set5_normXenograft1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set5,  
-                              file_path_sup = file_path_sup_Set5,
+                              file_path_sup = file_path_sup_Set5pST,
                               return_data = "phos", 
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
@@ -208,7 +216,7 @@ pST_Set5_normXenograft1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pS
 
 # Set 5
 pST_Set5_normXenograft14 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set5,  
-                              file_path_sup = file_path_sup_Set5,
+                              file_path_sup = file_path_sup_Set5pST,
                               return_data = "phos", 
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
@@ -373,76 +381,154 @@ name_l_Set5pST_normXenograft14 = list( "126" = "Xenograft1_E_24h_5_Set5",
 
 ```
 
-# Session Info
-```{r}
-sessionInfo()
-knitr::knit_exit()
-```
-
 ### Individual sets
 #### pY
 ```{r}
 pY_Set1_form <- pY_Set1 %>%
   select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`)
-newnames_Set1 <- c(name_l_Set1, paste0("log2FC_", name_l_Set1 ), name_l_Set1 )
-names(newnames_Set1) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set1)), 
+newnames_pY_Set1 <- c(name_l_Set1, paste0("log2FC_", name_l_Set1 ), name_l_Set1 )
+names(newnames_pY_Set1) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set1)), 
                           paste0("log2FC_", names(name_l_Set1)),
                           paste0("Centered_Abundance ", names(name_l_Set1)))
 stopifnot(colnames(pY_Set1_form %>% 
-                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_Set1)) 
-newnames_Set1["HGNC_Symbol"] <- "HGNC_Symbol"
-newnames_Set1["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
-newnames_Set1["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
-newnames_Set1["Annotated Sequence"] <- "Annotated_Sequence"
-colnames(pY_Set1_form) <- newnames_Set1[colnames(pY_Set1_form)]
-mean_normal_pY_Set1 <- pY_Set1_form %>% select(contains("log2FC_Xenograft_ctrl" )) %>%
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pY_Set1)) 
+newnames_pY_Set1["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pY_Set1["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pY_Set1["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pY_Set1["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pY_Set1_form) <- newnames_pY_Set1[colnames(pY_Set1_form)]
+mean_normal_pY_Set1 <- pY_Set1_form %>% select(contains("_ctrl" )) %>%
   #2^. %>% 
   rowMeans()
 pY_Set1_form <- pY_Set1_form %>%
   mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set1 } ) 
 pY_Set1_form 
 
-pY_Set2_form <- pY_Set2 %>%
+#pY_Set2_form <- pY_Set2 %>%
+#  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), #Master.Protein.Accessions = `Master Protein Accessions`,
+#                             Master.Protein.Descriptions = `Master Protein #Descriptions`)
+#newnames_pY_Set2 <- c(name_l_Set2, paste0("log2FC_", name_l_Set2 ), #name_l_Set2 )
+#names(newnames_pY_Set2) <- c( paste0("TMTNorm_Abundance ", #names(name_l_Set2)), 
+#                          paste0("log2FC_", names(name_l_Set2)),
+#                          paste0("Centered_Abundance ", #names(name_l_Set2)))
+#stopifnot(colnames(pY_Set2_form %>% 
+#                         select(contains("TMTNorm_Abundance" ) | #contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  #names(newnames_pY_Set2)) 
+#newnames_pY_Set2["HGNC_Symbol"] <- "HGNC_Symbol"
+#newnames_pY_Set2["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+#newnames_pY_Set2["Master.Protein.Descriptions"] <- #"Master.Protein.Descriptions"
+#newnames_pY_Set2["Annotated Sequence"] <- "Annotated_Sequence"
+#colnames(pY_Set2_form) <- newnames_pY_Set2[colnames(pY_Set2_form)]
+#mean_normal_pY_Set2 <- pY_Set2_form %>% select(contains("_ctrl" )) %>%
+#  #2^. %>% 
+#  rowMeans()
+#pY_Set2_form <- pY_Set2_form %>%
+#  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set2 #} ) 
+#pY_Set2_form
+
+pY_Set3_form <- pY_Set3 %>%
   select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`)
-newnames_Set2 <- c(name_l_Set2, paste0("log2FC_", name_l_Set2 ), name_l_Set2 )
-names(newnames_Set2) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set2)), 
-                          paste0("log2FC_", names(name_l_Set2)),
-                          paste0("Centered_Abundance ", names(name_l_Set2)))
-stopifnot(colnames(pY_Set2_form %>% 
-                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_Set2)) 
-newnames_Set2["HGNC_Symbol"] <- "HGNC_Symbol"
-newnames_Set2["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
-newnames_Set2["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
-newnames_Set2["Annotated Sequence"] <- "Annotated_Sequence"
-colnames(pY_Set2_form) <- newnames_Set2[colnames(pY_Set2_form)]
-mean_normal_pY_Set2 <- pY_Set2_form %>% select(contains("log2FC_Xenograft_ctrl" )) %>%
+newnames_pY_Set3 <- c(name_l_Set3, paste0("log2FC_", name_l_Set3 ), name_l_Set3 )
+names(newnames_pY_Set3) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set3)), 
+                          paste0("log2FC_", names(name_l_Set3)),
+                          paste0("Centered_Abundance ", names(name_l_Set3)))
+stopifnot(colnames(pY_Set3_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pY_Set3)) 
+newnames_pY_Set3["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pY_Set3["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pY_Set3["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pY_Set3["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pY_Set3_form) <- newnames_pY_Set3[colnames(pY_Set3_form)]
+mean_normal_pY_Set3 <- pY_Set3_form %>% select(contains("_ctrl" )) %>%
   #2^. %>% 
   rowMeans()
-pY_Set2_form <- pY_Set2_form %>%
-  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set2 } ) 
-pY_Set2_form
+pY_Set3_form <- pY_Set3_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set3 } ) 
+pY_Set3_form
+
+
+pY_Set4_form <- pY_Set4 %>%
+  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
+                             Master.Protein.Descriptions = `Master Protein Descriptions`)
+newnames_pY_Set4 <- c(name_l_Set4, paste0("log2FC_", name_l_Set4 ), name_l_Set4 )
+names(newnames_pY_Set4) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set4)), 
+                          paste0("log2FC_", names(name_l_Set4)),
+                          paste0("Centered_Abundance ", names(name_l_Set4)))
+stopifnot(colnames(pY_Set4_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pY_Set4)) 
+newnames_pY_Set4["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pY_Set4["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pY_Set4["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pY_Set4["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pY_Set4_form) <- newnames_pY_Set4[colnames(pY_Set4_form)]
+mean_normal_pY_Set4 <- pY_Set4_form %>% select(contains("_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+pY_Set4_form <- pY_Set4_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set4 } ) 
+pY_Set4_form
+
+pY_Set5_normXenograft1_form <- pY_Set5_normXenograft1 %>%
+  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
+                             Master.Protein.Descriptions = `Master Protein Descriptions`)
+newnames_pY_Set5_normXenograft1 <- c(name_l_Set5pY_normXenograft1, paste0("log2FC_", name_l_Set5pY_normXenograft1 ), name_l_Set5pY_normXenograft1 )
+names(newnames_pY_Set5_normXenograft1) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set5pY_normXenograft1)), 
+                          paste0("log2FC_", names(name_l_Set5pY_normXenograft1)),
+                          paste0("Centered_Abundance ", names(name_l_Set5pY_normXenograft1)))
+stopifnot(colnames(pY_Set5_normXenograft1_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pY_Set5_normXenograft1)) 
+newnames_pY_Set5_normXenograft1["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pY_Set5_normXenograft1["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pY_Set5_normXenograft1["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pY_Set5_normXenograft1["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pY_Set5_normXenograft1_form) <- newnames_pY_Set5_normXenograft1[colnames(pY_Set5_normXenograft1_form)]
+mean_normal_pY_Set5_normXenograft1 <- pY_Set5_normXenograft1_form %>% select(contains("_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+pY_Set5_normXenograft1_form <- pY_Set5_normXenograft1_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set5_normXenograft1 } ) 
+pY_Set5_normXenograft1_form
+
+pY_Set5_normXenograft14_form <- pY_Set5_normXenograft14 %>%
+  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
+                             Master.Protein.Descriptions = `Master Protein Descriptions`)
+newnames_pY_Set5_normXenograft14 <- c(name_l_Set5pY_normXenograft14, paste0("log2FC_", name_l_Set5pY_normXenograft14 ), name_l_Set5pY_normXenograft14 )
+names(newnames_pY_Set5_normXenograft14) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set5pY_normXenograft14)), 
+                          paste0("log2FC_", names(name_l_Set5pY_normXenograft14)),
+                          paste0("Centered_Abundance ", names(name_l_Set5pY_normXenograft14)))
+stopifnot(colnames(pY_Set5_normXenograft14_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pY_Set5_normXenograft14)) 
+newnames_pY_Set5_normXenograft14["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pY_Set5_normXenograft14["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pY_Set5_normXenograft14["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pY_Set5_normXenograft14["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pY_Set5_normXenograft14_form) <- newnames_pY_Set5_normXenograft14[colnames(pY_Set5_normXenograft14_form)]
+mean_normal_pY_Set5_normXenograft14 <- pY_Set5_normXenograft14_form %>% select(contains("_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+pY_Set5_normXenograft14_form <- pY_Set5_normXenograft14_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set5_normXenograft14 } ) 
+pY_Set5_normXenograft14_form
 ```
 
 #### pST
-##### Fractionated
 ```{r}
 pST_Set1_form <- pST_Set1 %>%
   select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`)
-newnames_Set1 <- c(name_l_Set1, paste0("log2FC_", name_l_Set1 ), name_l_Set1 )
-names(newnames_Set1) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set1)), 
+newnames_pST_Set1 <- c(name_l_Set1, paste0("log2FC_", name_l_Set1 ), name_l_Set1 )
+names(newnames_pST_Set1) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set1)), 
                           paste0("log2FC_", names(name_l_Set1)),
                           paste0("Centered_Abundance ", names(name_l_Set1)))
 stopifnot(colnames(pST_Set1_form %>% 
-                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_Set1)) 
-newnames_Set1["HGNC_Symbol"] <- "HGNC_Symbol"
-newnames_Set1["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
-newnames_Set1["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
-newnames_Set1["Annotated Sequence"] <- "Annotated_Sequence"
-colnames(pST_Set1_form) <- newnames_Set1[colnames(pST_Set1_form)]
-mean_normal_pST_Set1 <- pST_Set1_form %>% select(contains("log2FC_Xenograft_ctrl" )) %>%
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pST_Set1)) 
+newnames_pST_Set1["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pST_Set1["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pST_Set1["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pST_Set1["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pST_Set1_form) <- newnames_pST_Set1[colnames(pST_Set1_form)]
+mean_normal_pST_Set1 <- pST_Set1_form %>% select(contains("_ctrl" )) %>%
   #2^. %>% 
   rowMeans()
 pST_Set1_form <- pST_Set1_form %>%
@@ -452,233 +538,247 @@ pST_Set1_form
 pST_Set2_form <- pST_Set2 %>%
   select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`)
-newnames_Set2 <- c(name_l_Set2, paste0("log2FC_", name_l_Set2 ), name_l_Set2 )
-names(newnames_Set2) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set2)), 
+newnames_pST_Set2 <- c(name_l_Set2, paste0("log2FC_", name_l_Set2 ), name_l_Set2 )
+names(newnames_pST_Set2) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set2)), 
                           paste0("log2FC_", names(name_l_Set2)),
                           paste0("Centered_Abundance ", names(name_l_Set2)))
 stopifnot(colnames(pST_Set2_form %>% 
-                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_Set2)) 
-newnames_Set2["HGNC_Symbol"] <- "HGNC_Symbol"
-newnames_Set2["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
-newnames_Set2["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
-newnames_Set2["Annotated Sequence"] <- "Annotated_Sequence"
-colnames(pST_Set2_form) <- newnames_Set2[colnames(pST_Set2_form)]
-mean_normal_pST_Set2 <- pST_Set2_form %>% select(contains("log2FC_Xenograft_ctrl" )) %>%
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pST_Set2)) 
+newnames_pST_Set2["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pST_Set2["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pST_Set2["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pST_Set2["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pST_Set2_form) <- newnames_pST_Set2[colnames(pST_Set2_form)]
+mean_normal_pST_Set2 <- pST_Set2_form %>% select(contains("_ctrl" )) %>%
   #2^. %>% 
   rowMeans()
 pST_Set2_form <- pST_Set2_form %>%
   mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST_Set2 } ) 
 pST_Set2_form
-```
 
-##### One shot
-```{r}
-pST_Set1_oneshot_form <- pST_Set1_oneshot %>%
+pST_Set3_form <- pST_Set3 %>%
   select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`)
-newnames_Set1 <- c(name_l_Set1, paste0("log2FC_", name_l_Set1 ), name_l_Set1 )
-names(newnames_Set1) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set1)), 
-                          paste0("log2FC_", names(name_l_Set1)),
-                          paste0("Centered_Abundance ", names(name_l_Set1)))
-stopifnot(colnames(pST_Set1_oneshot_form %>% 
-                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_Set1)) 
-newnames_Set1["HGNC_Symbol"] <- "HGNC_Symbol"
-newnames_Set1["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
-newnames_Set1["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
-newnames_Set1["Annotated Sequence"] <- "Annotated_Sequence"
-colnames(pST_Set1_oneshot_form) <- newnames_Set1[colnames(pST_Set1_oneshot_form)]
-mean_normal_pST_Set1_oneshot <- pST_Set1_oneshot_form %>% select(contains("log2FC_Xenograft_ctrl" )) %>%
+newnames_pST_Set3 <- c(name_l_Set3, paste0("log2FC_", name_l_Set3 ), name_l_Set3 )
+names(newnames_pST_Set3) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set3)), 
+                          paste0("log2FC_", names(name_l_Set3)),
+                          paste0("Centered_Abundance ", names(name_l_Set3)))
+stopifnot(colnames(pST_Set3_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pST_Set3)) 
+newnames_pST_Set3["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pST_Set3["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pST_Set3["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pST_Set3["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pST_Set3_form) <- newnames_pST_Set3[colnames(pST_Set3_form)]
+mean_normal_pST_Set3 <- pST_Set3_form %>% select(contains("_ctrl" )) %>%
   #2^. %>% 
   rowMeans()
-pST_Set1_oneshot_form <- pST_Set1_oneshot_form %>%
-  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST_Set1_oneshot } ) 
-pST_Set1_oneshot_form 
+pST_Set3_form <- pST_Set3_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST_Set3 } ) 
+pST_Set3_form
+
+
+pST_Set4_form <- pST_Set4 %>%
+  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
+                             Master.Protein.Descriptions = `Master Protein Descriptions`)
+newnames_pST_Set4 <- c(name_l_Set4, paste0("log2FC_", name_l_Set4 ), name_l_Set4 )
+names(newnames_pST_Set4) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set4)), 
+                          paste0("log2FC_", names(name_l_Set4)),
+                          paste0("Centered_Abundance ", names(name_l_Set4)))
+stopifnot(colnames(pST_Set4_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pST_Set4)) 
+newnames_pST_Set4["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pST_Set4["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pST_Set4["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pST_Set4["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pST_Set4_form) <- newnames_pST_Set4[colnames(pST_Set4_form)]
+mean_normal_pST_Set4 <- pST_Set4_form %>% select(contains("_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+pST_Set4_form <- pST_Set4_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST_Set4 } ) 
+pST_Set4_form
+
+pST_Set5_normXenograft1_form <- pST_Set5_normXenograft1 %>%
+  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
+                             Master.Protein.Descriptions = `Master Protein Descriptions`)
+newnames_pST_Set5_normXenograft1 <- c(name_l_Set5pST_normXenograft1, paste0("log2FC_", name_l_Set5pST_normXenograft1 ), name_l_Set5pST_normXenograft1 )
+names(newnames_pST_Set5_normXenograft1) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set5pST_normXenograft1)), 
+                          paste0("log2FC_", names(name_l_Set5pST_normXenograft1)),
+                          paste0("Centered_Abundance ", names(name_l_Set5pST_normXenograft1)))
+stopifnot(colnames(pST_Set5_normXenograft1_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pST_Set5_normXenograft1)) 
+newnames_pST_Set5_normXenograft1["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pST_Set5_normXenograft1["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pST_Set5_normXenograft1["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pST_Set5_normXenograft1["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pST_Set5_normXenograft1_form) <- newnames_pST_Set5_normXenograft1[colnames(pST_Set5_normXenograft1_form)]
+mean_normal_pST_Set5_normXenograft1 <- pST_Set5_normXenograft1_form %>% select(contains("_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+pST_Set5_normXenograft1_form <- pST_Set5_normXenograft1_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST_Set5_normXenograft1 } ) 
+pST_Set5_normXenograft1_form
+
+pST_Set5_normXenograft14_form <- pST_Set5_normXenograft14 %>%
+  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
+                             Master.Protein.Descriptions = `Master Protein Descriptions`)
+newnames_pST_Set5_normXenograft14 <- c(name_l_Set5pST_normXenograft14, paste0("log2FC_", name_l_Set5pST_normXenograft14 ), name_l_Set5pST_normXenograft14 )
+names(newnames_pST_Set5_normXenograft14) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set5pST_normXenograft14)), 
+                          paste0("log2FC_", names(name_l_Set5pST_normXenograft14)),
+                          paste0("Centered_Abundance ", names(name_l_Set5pST_normXenograft14)))
+stopifnot(colnames(pST_Set5_normXenograft14_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pST_Set5_normXenograft14)) 
+newnames_pST_Set5_normXenograft14["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pST_Set5_normXenograft14["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pST_Set5_normXenograft14["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pST_Set5_normXenograft14["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pST_Set5_normXenograft14_form) <- newnames_pST_Set5_normXenograft14[colnames(pST_Set5_normXenograft14_form)]
+mean_normal_pST_Set5_normXenograft14 <- pST_Set5_normXenograft14_form %>% select(contains("_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+pST_Set5_normXenograft14_form <- pST_Set5_normXenograft14_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST_Set5_normXenograft14 } ) 
+pST_Set5_normXenograft14_form
 ```
 
-### Combine the two sets
+
+
+### Combine the sets
 #### pY
+##### Xenografts # 1
 ```{r}
-# Combine fold changes over bridge for the two pY sets
-pY <- left_join( 
+# Combine fold changes over bridge for the pY sets
+pY_Xenograft1 <- left_join( 
   Minimize_df(pY_Set1, name_l = name_l_Set1, FC = TRUE),
-  Minimize_df(pY_Set2, name_l = name_l_Set2, FC = TRUE),
+  Minimize_df(pY_Set5_normXenograft1, name_l = name_l_Set5pY_normXenograft1, FC = TRUE),
   by = c("HGNC_Symbol", "Annotated_Sequence" ) )
 
-pY <- left_join(pY,
+pY_Xenograft1 <- left_join(pY_Xenograft1,
           pY_Set1 %>% 
             select(`Annotated Sequence`,  Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`),
           by= c("Annotated_Sequence"= "Annotated Sequence"))
 
-pY_noNApeptides <- pY  %>% 
+pY_Xenograft1_noNApeptides <- pY_Xenograft1  %>% 
   select(-HGNC_Symbol, -Annotated_Sequence, 
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   is.na() %>%
   rowSums() <= 0
-pY_noNA <- pY[pY_noNApeptides,]
+pY_Xenograft1_noNA <- pY_Xenograft1[pY_Xenograft1_noNApeptides,]
 
-mean_normal_pY <- pY_noNA %>% select(contains("log2FC_Xenograft_ctrl" )) %>%
+mean_normal_pY_Xenograft1 <- pY_Xenograft1_noNA %>% select(contains("log2FC_Xenograft1_ctrl" )) %>%
   #2^. %>% 
   rowMeans()
 
-pY_noNA <- pY_noNA %>%
-  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY } ) 
+pY_Xenograft1_noNA <- pY_Xenograft1_noNA %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Xenograft1 } ) 
  
-pY_noNA 
+pY_Xenograft1_noNA 
 ```
 
-#### pY missing values
+##### Xenografts # 14
 ```{r}
-pY_withNA <- left_join(pY_Set1_withNA, pY_Set2_withNA, by = c("Sequence", "Master Protein Accessions", 
-                                                              "Master Protein Descriptions",
-                                                 "Annotated Sequence", "HGNC_Symbol" ) )
-
-# Sup normalised
-pY_withNA_norm <- left_join( 
-    Minimize_df(pY_Set1_withNA_norm, name_l = name_l_Set1, FC = TRUE),
-    Minimize_df(pY_Set2_withNA_norm, name_l = name_l_Set2, FC = TRUE),
+# Combine fold changes over bridge for the pY sets
+pY_Xenograft14 <- 
+  left_join(
+  left_join( 
+    Minimize_df(pY_Set3, name_l = name_l_Set3, FC = TRUE),
+    Minimize_df(pY_Set4, name_l = name_l_Set4, FC = TRUE),
+    by = c("HGNC_Symbol", "Annotated_Sequence" ) ),
+  Minimize_df(pY_Set5_normXenograft14, name_l = name_l_Set5pY_normXenograft14, FC = TRUE),
   by = c("HGNC_Symbol", "Annotated_Sequence" ) )
-pY_withNA_norm <- left_join(pY_withNA_norm,
-          pY_Set1 %>% 
+
+pY_Xenograft14 <- left_join(pY_Xenograft14,
+          pY_Set3 %>% 
             select(`Annotated Sequence`,  Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`),
           by= c("Annotated_Sequence"= "Annotated Sequence"))
 
-pY_withNA_norm
+pY_Xenograft14_noNApeptides <- pY_Xenograft14  %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  is.na() %>%
+  rowSums() <= 0
+pY_Xenograft14_noNA <- pY_Xenograft14[pY_Xenograft14_noNApeptides,]
+
+mean_normal_pY_Xenograft14 <- pY_Xenograft14_noNA %>% select(contains("log2FC_Xenograft14_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+
+pY_Xenograft14_noNA <- pY_Xenograft14_noNA %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Xenograft14 } ) 
+ 
+pY_Xenograft14_noNA 
 ```
 
 #### pST
+##### Xenografts # 1
 ```{r}
-# Combine fold changes over bridge for the two pST sets
-pST <- left_join( 
+# Combine fold changes over bridge for the pST sets
+pST_Xenograft1 <- left_join( 
   Minimize_df(pST_Set1, name_l = name_l_Set1, FC = TRUE),
-  Minimize_df(pST_Set2, name_l = name_l_Set2, FC = TRUE),
+  Minimize_df(pST_Set5_normXenograft1, name_l = name_l_Set5pST_normXenograft1, FC = TRUE),
   by = c("HGNC_Symbol", "Annotated_Sequence" ) )
 
-pST <- left_join(pST,
+pST_Xenograft1 <- left_join(pST_Xenograft1,
           pST_Set1 %>% 
             select(`Annotated Sequence`,  Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`),
           by= c("Annotated_Sequence"= "Annotated Sequence"))
 
-pST_noNApeptides <- pST  %>% 
+pST_Xenograft1_noNApeptides <- pST_Xenograft1  %>% 
   select(-HGNC_Symbol, -Annotated_Sequence, 
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   is.na() %>%
   rowSums() <= 0
-pST_noNA <- pST[pST_noNApeptides,]
+pST_Xenograft1_noNA <- pST_Xenograft1[pST_Xenograft1_noNApeptides,]
 
-mean_normal_pST <- pST_noNA %>% select(contains("log2FC_Xenograft_ctrl" )) %>%
+mean_normal_pST_Xenograft1 <- pST_Xenograft1_noNA %>% select(contains("log2FC_Xenograft1_ctrl" )) %>%
   #2^. %>% 
   rowMeans()
 
-pST_noNA <- pST_noNA %>%
-  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST } ) 
+pST_Xenograft1_noNA <- pST_Xenograft1_noNA %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST_Xenograft1 } ) 
  
-pST_noNA 
+pST_Xenograft1_noNA 
 ```
 
-#### pST missing values
+##### Xenografts # 14
 ```{r}
-pST_withNA <- left_join(pST_Set1_withNA, pST_Set2_withNA, by = c("Sequence", "Master Protein Accessions", 
-                                                              "Master Protein Descriptions",
-                                                 "Annotated Sequence", "HGNC_Symbol" ) )
-
-# Sup normalised
-pST_withNA_norm <- left_join( 
-    Minimize_df(pST_Set1_withNA_norm, name_l = name_l_Set1, FC = TRUE),
-    Minimize_df(pST_Set2_withNA_norm, name_l = name_l_Set2, FC = TRUE),
+# Combine fold changes over bridge for the pST sets
+pST_Xenograft14 <- 
+  left_join(
+  left_join( 
+    Minimize_df(pST_Set3, name_l = name_l_Set3, FC = TRUE),
+    Minimize_df(pST_Set4, name_l = name_l_Set4, FC = TRUE),
+    by = c("HGNC_Symbol", "Annotated_Sequence" ) ),
+  Minimize_df(pST_Set5_normXenograft14, name_l = name_l_Set5pST_normXenograft14, FC = TRUE),
   by = c("HGNC_Symbol", "Annotated_Sequence" ) )
-pST_withNA_norm <- left_join(pST_withNA_norm,
-          pST_Set1 %>% 
+
+pST_Xenograft14 <- left_join(pST_Xenograft14,
+          pST_Set3 %>% 
             select(`Annotated Sequence`,  Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`),
           by= c("Annotated_Sequence"= "Annotated Sequence"))
 
-pST_withNA_norm
+pST_Xenograft14_noNApeptides <- pST_Xenograft14  %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  is.na() %>%
+  rowSums() <= 0
+pST_Xenograft14_noNA <- pST_Xenograft14[pST_Xenograft14_noNApeptides,]
+
+mean_normal_pST_Xenograft14 <- pST_Xenograft14_noNA %>% select(contains("log2FC_Xenograft14_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+
+pST_Xenograft14_noNA <- pST_Xenograft14_noNA %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pST_Xenograft14 } ) 
+ 
+pST_Xenograft14_noNA 
 ```
 
-
-#### Dataframes with NAs
-##### pY
-```{r}
-channels_Set1 <- unlist(name_l_Set1[gsub("Abundance ", "", colnames(pY_withNA %>% select(contains("Abundance") & contains("x")))) %>% gsub(".x", "", .)])
-names(channels_Set1) <- colnames(pY_withNA %>% select(contains("Abundance") & contains("x") & !contains("128C") ))
-
-channels_Set2 <- unlist(name_l_Set2[gsub("Abundance ", "", colnames(pY_withNA %>% select(contains("Abundance") & contains("y")))) %>% gsub(".y", "", .)])
-names(channels_Set2) <- colnames(pY_withNA %>% select(contains("Abundance") & contains("y") & !contains("132N") ))
-
-colnames(pY_withNA)[c(5:8, 10:22)] <- channels_Set1[colnames(pY_withNA)[c(5:8, 10:22)]]
-colnames(pY_withNA)[c(24:34,36:41)] <- channels_Set2[colnames(pY_withNA)[c(24:34,36:41)]]
-colnames(pY_withNA)[9] <- "Xenograft_ctrl_5d_1_Set1"
-colnames(pY_withNA)[35] <- "Xenograft_ctrl_5d_1_Set2"
-
-
-pY_withNA$notmissingcomletely_Set1  <- (pY_withNA %>%
-  select(unname(unlist(name_l_Set1))) %>%
-  rowwise() %>%
-  mutate_all(is.na) %>%
-  rowSums() ) != length(name_l_Set1)
-
-pY_withNA$notmissingcomletely_Set2 <- (pY_withNA %>%
-  select(unname(unlist(name_l_Set2))) %>%
-  rowwise() %>%
-  mutate_all(is.na) %>%
-  rowSums() ) != length(name_l_Set2)
-
-#colnames(pY_withNA) <- make.unique(colnames(pY_withNA))
-
-pY_withNA$anyNas <- (pY_withNA %>%
-  rowwise() %>%
-  mutate_all(is.na) %>%
-  rowSums() ) != 0
-
-pY_NAs <- pY_withNA %>% 
-  filter(notmissingcomletely_Set1 & notmissingcomletely_Set2  & anyNas) %>%
-  select(-c(notmissingcomletely_Set1, notmissingcomletely_Set2, anyNas))
-
-pY_NAs
-```
-
-##### pST
-```{r}
-channels_Set1 <- unlist(name_l_Set1[gsub("Abundance ", "", colnames(pST_withNA %>% select(contains("Abundance") & contains("x")))) %>% gsub(".x", "", .)])
-names(channels_Set1) <- colnames(pST_withNA %>% select(contains("Abundance") & contains("x") & !contains("128C") ))
-
-channels_Set2 <- unlist(name_l_Set2[gsub("Abundance ", "", colnames(pST_withNA %>% select(contains("Abundance") & contains("y")))) %>% gsub(".y", "", .)])
-names(channels_Set2) <- colnames(pST_withNA %>% select(contains("Abundance") & contains("y") & !contains("132N") ))
-
-colnames(pST_withNA)[c(5:8, 10:22)] <- channels_Set1[colnames(pST_withNA)[c(5:8, 10:22)]]
-colnames(pST_withNA)[c(24:34,36:41)] <- channels_Set2[colnames(pST_withNA)[c(24:34,36:41)]]
-colnames(pST_withNA)[9] <- "Xenograft_ctrl_5d_1_Set1"
-colnames(pST_withNA)[35] <- "Xenograft_ctrl_5d_1_Set2"
-
-
-pST_withNA$notmissingcomletely_Set1  <- (pST_withNA %>%
-  select(unname(unlist(name_l_Set1))) %>%
-  rowwise() %>%
-  mutate_all(is.na) %>%
-  rowSums() ) != length(name_l_Set1)
-
-pST_withNA$notmissingcomletely_Set2 <- (pST_withNA %>%
-  select(unname(unlist(name_l_Set2))) %>%
-  rowwise() %>%
-  mutate_all(is.na) %>%
-  rowSums() ) != length(name_l_Set2)
-
-#colnames(pST_withNA) <- make.unique(colnames(pST_withNA))
-
-pST_withNA$anyNas <- (pST_withNA %>%
-  rowwise() %>%
-  mutate_all(is.na) %>%
-  rowSums() ) != 0
-
-pST_NAs <- pST_withNA %>% 
-  filter(notmissingcomletely_Set1 & notmissingcomletely_Set2  & anyNas) %>%
-  select(-c(notmissingcomletely_Set1, notmissingcomletely_Set2, anyNas))
-
-pST_NAs
-```
 
 
 ### Annotate phosphorylation sites
@@ -686,7 +786,12 @@ pST_NAs
 ```{r}
 # TODO How to deal with peptides which have multiple phosphorylations?
 
-all_pY_sites <- pY_noNA %>% select(HGNC_Symbol, Annotated_Sequence) %>% unique
+all_pY_sites <- bind_rows(
+  pY_Set1_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  #pY_Set2_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  pY_Set3_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  pY_Set4_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  pY_Set5_normXenograft1_form %>% select(HGNC_Symbol, Annotated_Sequence)) %>% unique
 if(!all(str_count(all_pY_sites$Annotated_Sequence, "y") == 1)){warning("There are peptides with multiple pY sites")}
 tmp_sequence <- paste0("jjjjjjj", all_pY_sites$Annotated_Sequence,"jjjjjjj" )
 position_pY_phos <- str_locate(tmp_sequence, "y")[,1]
@@ -740,11 +845,18 @@ all_pY_sites <- left_join(all_pY_sites,
           by = c( "HGNC_Symbol" = "GENE", "MOD_RSD" )) 
 ```
 
+
+
 #### pST
 ```{r, eval=TRUE}
 # TODO How to deal with peptides which have multiple phosphorylations?
 
-all_pST_sites <- pST_noNA %>% select(HGNC_Symbol, Annotated_Sequence) %>% unique
+all_pST_sites <- bind_rows(
+  pST_Set1_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  pST_Set2_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  pST_Set3_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  pST_Set4_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  pST_Set5_normXenograft1_form %>% select(HGNC_Symbol, Annotated_Sequence)) %>% unique
 if(!all(str_count(all_pST_sites$Annotated_Sequence, "s|t") == 1)){warning("There are peptides with multiple pST sites")}
 tmp_sequence <- paste0("jjjjjjj", all_pST_sites$Annotated_Sequence,"jjjjjjj" )
 position_pST_phos <- str_locate(tmp_sequence, "s|t")[,1]
@@ -799,19 +911,38 @@ all_pST_sites <- left_join(all_pST_sites,
 ```
 
 
+
 ### Matrix
 #### pY
+##### Xenograft #1
 ```{r}
-pY_mat <- pY_noNA %>% 
+pY_Xenograft1_mat <- pY_Xenograft1_noNA %>% 
   select(-HGNC_Symbol, -Annotated_Sequence,           
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix() %>% 
   t()
 
-colnames(pY_mat) <- paste0( pY_noNA$HGNC_Symbol, "_", pY_noNA$Annotated_Sequence )
+colnames(pY_Xenograft1_mat) <- paste0( pY_Xenograft1_noNA$HGNC_Symbol, "_", pY_Xenograft1_noNA$Annotated_Sequence )
 
-pY_mat[1:5, 1:5]
+pY_Xenograft1_mat[1:5, 1:5]
+```
 
+##### Xenograft #14
+```{r}
+pY_Xenograft14_mat <- pY_Xenograft14_noNA %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+
+colnames(pY_Xenograft14_mat) <- paste0( pY_Xenograft14_noNA$HGNC_Symbol, "_", pY_Xenograft14_noNA$Annotated_Sequence )
+
+pY_Xenograft14_mat[1:5, ]
+```
+
+
+##### Individual Sets
+```{r}
 ### Set 1
 pY_mat_Set1 <- pY_Set1_form %>% 
   select(-HGNC_Symbol, -Annotated_Sequence,           
@@ -821,29 +952,68 @@ pY_mat_Set1 <- pY_Set1_form %>%
 colnames(pY_mat_Set1) <- paste0( pY_Set1_form$HGNC_Symbol, "_", pY_Set1_form$Annotated_Sequence )
 pY_mat_Set1[1:5, 1:5]
 
-### Set 2
-pY_mat_Set2 <- pY_Set2_form %>% 
+#### Set 2
+#pY_mat_Set2 <- pY_Set2_form %>% 
+#  select(-HGNC_Symbol, -Annotated_Sequence,           
+#         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+#  as.matrix() %>% 
+#  t()
+#colnames(pY_mat_Set2) <- paste0( pY_Set2_form$HGNC_Symbol, "_", #pY_Set2_form$Annotated_Sequence )
+#pY_mat_Set2[1:5, 1:5]
+
+### Set 3
+pY_mat_Set3 <- pY_Set3_form %>% 
   select(-HGNC_Symbol, -Annotated_Sequence,           
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix() %>% 
   t()
-colnames(pY_mat_Set2) <- paste0( pY_Set2_form$HGNC_Symbol, "_", pY_Set2_form$Annotated_Sequence )
-pY_mat_Set2[1:5, 1:5]
+colnames(pY_mat_Set3) <- paste0( pY_Set3_form$HGNC_Symbol, "_", pY_Set3_form$Annotated_Sequence )
+pY_mat_Set3[1:5, 1:5]
+
+### Set 4
+pY_mat_Set4 <- pY_Set4_form %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+colnames(pY_mat_Set4) <- paste0( pY_Set4_form$HGNC_Symbol, "_", pY_Set4_form$Annotated_Sequence )
+pY_mat_Set4[1:5, 1:5]
+
+### Set 5
+pY_mat_Set5_normXenograft1 <- pY_Set5_normXenograft1_form %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+colnames(pY_mat_Set5_normXenograft1) <- paste0( pY_Set5_normXenograft1_form$HGNC_Symbol, "_", pY_Set5_normXenograft1_form$Annotated_Sequence )
+pY_mat_Set5_normXenograft1[1:5, 1:5]
+
+### Set 5
+pY_mat_Set5_normXenograft14 <- pY_Set5_normXenograft14_form %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+colnames(pY_mat_Set5_normXenograft14) <- paste0( pY_Set5_normXenograft14_form$HGNC_Symbol, "_", pY_Set5_normXenograft14_form$Annotated_Sequence )
+pY_mat_Set5_normXenograft14[1:5, 1:5]
 ```
 
-
 #### pST
+##### Xenograft #1
 ```{r}
-pST_mat <- pST_noNA %>% 
+pST_Xenograft1_mat <- pST_Xenograft1_noNA %>% 
   select(-HGNC_Symbol, -Annotated_Sequence,           
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix() %>% 
   t()
 
-colnames(pST_mat) <- paste0( pST_noNA$HGNC_Symbol, "_", pST_noNA$Annotated_Sequence )
+colnames(pST_Xenograft1_mat) <- paste0( pST_Xenograft1_noNA$HGNC_Symbol, "_", pST_Xenograft1_noNA$Annotated_Sequence )
 
-pST_mat[1:5, 1:5]
+pST_Xenograft1_mat[1:5, 1:5]
+```
 
+##### Individual Sets
+```{r}
 ### Set 1
 pST_mat_Set1 <- pST_Set1_form %>% 
   select(-HGNC_Symbol, -Annotated_Sequence,           
@@ -853,15 +1023,6 @@ pST_mat_Set1 <- pST_Set1_form %>%
 colnames(pST_mat_Set1) <- paste0( pST_Set1_form$HGNC_Symbol, "_", pST_Set1_form$Annotated_Sequence )
 pST_mat_Set1[1:5, 1:5]
 
-### Set 1 one shot
-pST_mat_Set1_oneshot <- pST_Set1_oneshot_form %>% 
-  select(-HGNC_Symbol, -Annotated_Sequence,           
-         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
-  as.matrix() %>% 
-  t()
-colnames(pST_mat_Set1_oneshot) <- paste0( pST_Set1_oneshot_form$HGNC_Symbol, "_", pST_Set1_oneshot_form$Annotated_Sequence )
-pST_mat_Set1_oneshot[1:5, 1:5]
-
 ### Set 2
 pST_mat_Set2 <- pST_Set2_form %>% 
   select(-HGNC_Symbol, -Annotated_Sequence,           
@@ -870,18 +1031,54 @@ pST_mat_Set2 <- pST_Set2_form %>%
   t()
 colnames(pST_mat_Set2) <- paste0( pST_Set2_form$HGNC_Symbol, "_", pST_Set2_form$Annotated_Sequence )
 pST_mat_Set2[1:5, 1:5]
-```
 
+### Set 3
+pST_mat_Set3 <- pST_Set3_form %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+colnames(pST_mat_Set3) <- paste0( pST_Set3_form$HGNC_Symbol, "_", pST_Set3_form$Annotated_Sequence )
+pST_mat_Set3[1:5, 1:5]
+
+### Set 4
+pST_mat_Set4 <- pST_Set4_form %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+colnames(pST_mat_Set4) <- paste0( pST_Set4_form$HGNC_Symbol, "_", pST_Set4_form$Annotated_Sequence )
+pST_mat_Set4[1:5, 1:5]
+
+### Set 5
+pST_mat_Set5_normXenograft1 <- pST_Set5_normXenograft1_form %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+colnames(pST_mat_Set5_normXenograft1) <- paste0( pST_Set5_normXenograft1_form$HGNC_Symbol, "_", pST_Set5_normXenograft1_form$Annotated_Sequence )
+pST_mat_Set5_normXenograft1[1:5, 1:5]
+
+### Set 5
+pST_mat_Set5_normXenograft14 <- pST_Set5_normXenograft14_form %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+colnames(pST_mat_Set5_normXenograft14) <- paste0( pST_Set5_normXenograft14_form$HGNC_Symbol, "_", pST_Set5_normXenograft14_form$Annotated_Sequence )
+pST_mat_Set5_normXenograft14[1:5, 1:5]
+```
 
 
 
 ### Summarised Experiment
 #### pY
 ##### Combined
+###### Xenograft #1
 ```{r}
 # Assay data
-assay_data_pY <- 
-  pY_noNA %>% 
+assay_data_pY_Xenograft1 <- 
+  pY_Xenograft1_noNA %>% 
   mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
   as.data.frame() %>% 
   column_to_rownames("coln") %>%
@@ -889,11 +1086,11 @@ assay_data_pY <-
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix()
 
-colnames(assay_data_pY) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY) )
+#colnames(assay_data_pY_Xenograft1) <- gsub("log2FC_Xenograft1_", "", colnames(assay_data_pY_Xenograft1) )
 
 # RowData
-rowData_pY <- 
-  pY_noNA %>%
+rowData_pY_Xenograft1 <- 
+  pY_Xenograft1_noNA %>%
   select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
   mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
   mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
@@ -903,22 +1100,77 @@ rowData_pY <-
 
 
 # ColData
-colData_pY <- 
-  str_split( gsub("log2FC_Xenograft_", "", colnames(assay_data_pY) ), pattern = "_", simplify = TRUE ) %>%
+colData_pY_Xenograft1 <- 
+  str_split( #gsub("log2FC_Xenograft1_", "", 
+                  colnames(assay_data_pY_Xenograft1 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
   as.data.frame()
-rownames(colData_pY) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY) )
-colnames(colData_pY) <- c("condition", "day", "replicate", "set" )
-colData_pY$label <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY) )
-colData_pY$ID <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY) )
+rownames(colData_pY_Xenograft1) <- #gsub("log2FC_Xenograft_", "", 
+                                        colnames(assay_data_pY_Xenograft1)
+                                    #    )
+colnames(colData_pY_Xenograft1) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pY_Xenograft1$label <- #gsub("log2FC_Xenograft_", "", 
+                                    colnames(assay_data_pY_Xenograft1) # )
+colData_pY_Xenograft1$ID <- #gsub("log2FC_Xenograft_", "", 
+                                 colnames(assay_data_pY_Xenograft1) #)
 
-pY_se <- SummarizedExperiment(assays = assay_data_pY,
-                           colData = colData_pY,
-                           rowData = rowData_pY)
-validObject(pY_se)
-pY_se
+pY_Xenograft1_se <- SummarizedExperiment(assays = assay_data_pY_Xenograft1,
+                           colData = colData_pY_Xenograft1,
+                           rowData = rowData_pY_Xenograft1)
+validObject(pY_Xenograft1_se)
+pY_Xenograft1_se
 ```
 
-##### Set 1
+###### Xenograft #14
+```{r}
+# Assay data
+assay_data_pY_Xenograft14 <- 
+  pY_Xenograft14_noNA %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pY_Xenograft14) <- gsub("log2FC_Xenograft14_", "", colnames(assay_data_pY_Xenograft14) )
+
+# RowData
+rowData_pY_Xenograft14 <- 
+  pY_Xenograft14_noNA %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pY_Xenograft14 <- 
+  str_split( #gsub("log2FC_Xenograft14_", "", 
+                  colnames(assay_data_pY_Xenograft14 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pY_Xenograft14) <- #gsub("log2FC_Xenograft_", "", 
+                                        colnames(assay_data_pY_Xenograft14)
+                                    #    )
+colnames(colData_pY_Xenograft14) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pY_Xenograft14$label <- #gsub("log2FC_Xenograft_", "", 
+                                    colnames(assay_data_pY_Xenograft14) # )
+colData_pY_Xenograft14$ID <- #gsub("log2FC_Xenograft_", "", 
+                                 colnames(assay_data_pY_Xenograft14) #)
+
+pY_Xenograft14_se <- SummarizedExperiment(assays = assay_data_pY_Xenograft14,
+                           colData = colData_pY_Xenograft14,
+                           rowData = rowData_pY_Xenograft14)
+validObject(pY_Xenograft14_se)
+pY_Xenograft14_se
+```
+
+
+##### Individual sets
+###### Set 1
 ```{r}
 # Assay data
 assay_data_pY_Set1 <- 
@@ -930,7 +1182,7 @@ assay_data_pY_Set1 <-
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix()
 
-colnames(assay_data_pY_Set1) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set1) )
+#colnames(assay_data_pY_Set1) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set1) )
 
 # RowData
 rowData_pY_Set1 <- 
@@ -945,12 +1197,18 @@ rowData_pY_Set1 <-
 
 # ColData
 colData_pY_Set1 <- 
-  str_split( gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set1) ), pattern = "_", simplify = TRUE ) %>%
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pY_Set1 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
   as.data.frame()
-rownames(colData_pY_Set1) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set1) )
-colnames(colData_pY_Set1) <- c("condition", "day", "replicate", "set" )
-colData_pY_Set1$label <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set1) )
-colData_pY_Set1$ID <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set1) )
+rownames(colData_pY_Set1) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pY_Set1) #)
+colnames(colData_pY_Set1) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pY_Set1$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pY_Set1) #)
+colData_pY_Set1$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pY_Set1) #)
 
 pY_se_Set1 <- SummarizedExperiment(assays = assay_data_pY_Set1,
                            colData = colData_pY_Set1,
@@ -959,12 +1217,11 @@ validObject(pY_se_Set1)
 pY_se_Set1
 ```
 
-
-##### Set 2
+###### Set 3
 ```{r}
 # Assay data
-assay_data_pY_Set2 <- 
-  pY_Set2_form %>% 
+assay_data_pY_Set3 <- 
+  pY_Set3_form %>% 
   mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
   as.data.frame() %>% 
   column_to_rownames("coln") %>%
@@ -972,11 +1229,11 @@ assay_data_pY_Set2 <-
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix()
 
-colnames(assay_data_pY_Set2) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set2) )
+#colnames(assay_data_pY_Set3) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set3) )
 
 # RowData
-rowData_pY_Set2 <- 
-  pY_Set2_form %>%
+rowData_pY_Set3 <- 
+  pY_Set3_form %>%
   select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
   mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
   mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
@@ -986,27 +1243,177 @@ rowData_pY_Set2 <-
 
 
 # ColData
-colData_pY_Set2 <- 
-  str_split( gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set2) ), pattern = "_", simplify = TRUE ) %>%
+colData_pY_Set3 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pY_Set3 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
   as.data.frame()
-rownames(colData_pY_Set2) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set2) )
-colnames(colData_pY_Set2) <- c("condition", "day", "replicate", "set" )
-colData_pY_Set2$label <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set2) )
-colData_pY_Set2$ID <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set2) )
+rownames(colData_pY_Set3) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pY_Set3) #)
+colnames(colData_pY_Set3) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pY_Set3$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pY_Set3) #)
+colData_pY_Set3$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pY_Set3) #)
 
-pY_se_Set2 <- SummarizedExperiment(assays = assay_data_pY_Set2,
-                           colData = colData_pY_Set2,
-                           rowData = rowData_pY_Set2)
-validObject(pY_se_Set2)
-pY_se_Set2
+pY_se_Set3 <- SummarizedExperiment(assays = assay_data_pY_Set3,
+                           colData = colData_pY_Set3,
+                           rowData = rowData_pY_Set3)
+validObject(pY_se_Set3)
+pY_se_Set3
 ```
+
+
+###### Set 4
+```{r}
+# Assay data
+assay_data_pY_Set4 <- 
+  pY_Set4_form %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pY_Set4) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set4) )
+
+# RowData
+rowData_pY_Set4 <- 
+  pY_Set4_form %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pY_Set4 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pY_Set4 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pY_Set4) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pY_Set4) #)
+colnames(colData_pY_Set4) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pY_Set4$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pY_Set4) #)
+colData_pY_Set4$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pY_Set4) #)
+
+pY_se_Set4 <- SummarizedExperiment(assays = assay_data_pY_Set4,
+                           colData = colData_pY_Set4,
+                           rowData = rowData_pY_Set4)
+validObject(pY_se_Set4)
+pY_se_Set4
+```
+
+###### Set 5 norm to Xenograft #1
+```{r}
+# Assay data
+assay_data_pY_Set5_normXenograft1 <- 
+  pY_Set5_normXenograft1_form %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pY_Set5_normXenograft1) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set5_normXenograft1) )
+
+# RowData
+rowData_pY_Set5_normXenograft1 <- 
+  pY_Set5_normXenograft1_form %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pY_Set5_normXenograft1 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pY_Set5_normXenograft1 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pY_Set5_normXenograft1) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pY_Set5_normXenograft1) #)
+colnames(colData_pY_Set5_normXenograft1) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pY_Set5_normXenograft1$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pY_Set5_normXenograft1) #)
+colData_pY_Set5_normXenograft1$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pY_Set5_normXenograft1) #)
+
+pY_se_Set5_normXenograft1 <- SummarizedExperiment(assays = assay_data_pY_Set5_normXenograft1,
+                           colData = colData_pY_Set5_normXenograft1,
+                           rowData = rowData_pY_Set5_normXenograft1)
+validObject(pY_se_Set5_normXenograft1)
+pY_se_Set5_normXenograft1
+```
+
+###### Set 5 norm to Xenograft #14
+```{r}
+# Assay data
+assay_data_pY_Set5_normXenograft14 <- 
+  pY_Set5_normXenograft14_form %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pY_Set5_normXenograft14) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set5_normXenograft14) )
+
+# RowData
+rowData_pY_Set5_normXenograft14 <- 
+  pY_Set5_normXenograft14_form %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pY_Set5_normXenograft14 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pY_Set5_normXenograft14 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pY_Set5_normXenograft14) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pY_Set5_normXenograft14) #)
+colnames(colData_pY_Set5_normXenograft14) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pY_Set5_normXenograft14$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pY_Set5_normXenograft14) #)
+colData_pY_Set5_normXenograft14$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pY_Set5_normXenograft14) #)
+
+pY_se_Set5_normXenograft14 <- SummarizedExperiment(assays = assay_data_pY_Set5_normXenograft14,
+                           colData = colData_pY_Set5_normXenograft14,
+                           rowData = rowData_pY_Set5_normXenograft14)
+validObject(pY_se_Set5_normXenograft14)
+pY_se_Set5_normXenograft14
+```
+
 
 #### pST
 ##### Combined
+###### Xenograft #1
 ```{r}
 # Assay data
-assay_data_pST <- 
-  pST_noNA %>% 
+assay_data_pST_Xenograft1 <- 
+  pST_Xenograft1_noNA %>% 
   mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
   as.data.frame() %>% 
   column_to_rownames("coln") %>%
@@ -1014,11 +1421,11 @@ assay_data_pST <-
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix()
 
-colnames(assay_data_pST) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST) )
+#colnames(assay_data_pST_Xenograft1) <- gsub("log2FC_Xenograft1_", "", colnames(assay_data_pST_Xenograft1) )
 
 # RowData
-rowData_pST <- 
-  pST_noNA %>%
+rowData_pST_Xenograft1 <- 
+  pST_Xenograft1_noNA %>%
   select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
   mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
   mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
@@ -1028,23 +1435,77 @@ rowData_pST <-
 
 
 # ColData
-colData_pST <- 
-  str_split( gsub("log2FC_Xenograft_", "", colnames(assay_data_pST) ), pattern = "_", simplify = TRUE ) %>%
+colData_pST_Xenograft1 <- 
+  str_split( #gsub("log2FC_Xenograft1_", "", 
+                  colnames(assay_data_pST_Xenograft1 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
   as.data.frame()
-rownames(colData_pST) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST) )
-colnames(colData_pST) <- c("condition", "day", "replicate", "set" )
-colData_pST$label <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST) )
-colData_pST$ID <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST) )
+rownames(colData_pST_Xenograft1) <- #gsub("log2FC_Xenograft_", "", 
+                                        colnames(assay_data_pST_Xenograft1)
+                                    #    )
+colnames(colData_pST_Xenograft1) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pST_Xenograft1$label <- #gsub("log2FC_Xenograft_", "", 
+                                    colnames(assay_data_pST_Xenograft1) # )
+colData_pST_Xenograft1$ID <- #gsub("log2FC_Xenograft_", "", 
+                                 colnames(assay_data_pST_Xenograft1) #)
 
-pST_se <- SummarizedExperiment(assays = assay_data_pST,
-                           colData = colData_pST,
-                           rowData = rowData_pST)
-validObject(pST_se)
-pST_se
+pST_Xenograft1_se <- SummarizedExperiment(assays = assay_data_pST_Xenograft1,
+                           colData = colData_pST_Xenograft1,
+                           rowData = rowData_pST_Xenograft1)
+validObject(pST_Xenograft1_se)
+pST_Xenograft1_se
 ```
 
-##### Set 1
-###### Fractionated
+###### Xenograft #14
+```{r}
+# Assay data
+assay_data_pST_Xenograft14 <- 
+  pST_Xenograft14_noNA %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pST_Xenograft14) <- gsub("log2FC_Xenograft14_", "", colnames(assay_data_pST_Xenograft14) )
+
+# RowData
+rowData_pST_Xenograft14 <- 
+  pST_Xenograft14_noNA %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pST_Xenograft14 <- 
+  str_split( #gsub("log2FC_Xenograft14_", "", 
+                  colnames(assay_data_pST_Xenograft14 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pST_Xenograft14) <- #gsub("log2FC_Xenograft_", "", 
+                                        colnames(assay_data_pST_Xenograft14)
+                                    #    )
+colnames(colData_pST_Xenograft14) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pST_Xenograft14$label <- #gsub("log2FC_Xenograft_", "", 
+                                    colnames(assay_data_pST_Xenograft14) # )
+colData_pST_Xenograft14$ID <- #gsub("log2FC_Xenograft_", "", 
+                                 colnames(assay_data_pST_Xenograft14) #)
+
+pST_Xenograft14_se <- SummarizedExperiment(assays = assay_data_pST_Xenograft14,
+                           colData = colData_pST_Xenograft14,
+                           rowData = rowData_pST_Xenograft14)
+validObject(pST_Xenograft14_se)
+pST_Xenograft14_se
+```
+
+
+##### Individual sets
+###### Set 1
 ```{r}
 # Assay data
 assay_data_pST_Set1 <- 
@@ -1056,7 +1517,7 @@ assay_data_pST_Set1 <-
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix()
 
-colnames(assay_data_pST_Set1) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1) )
+#colnames(assay_data_pST_Set1) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1) )
 
 # RowData
 rowData_pST_Set1 <- 
@@ -1071,12 +1532,18 @@ rowData_pST_Set1 <-
 
 # ColData
 colData_pST_Set1 <- 
-  str_split( gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1) ), pattern = "_", simplify = TRUE ) %>%
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pST_Set1 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
   as.data.frame()
-rownames(colData_pST_Set1) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1) )
-colnames(colData_pST_Set1) <- c("condition", "day", "replicate", "set" )
-colData_pST_Set1$label <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1) )
-colData_pST_Set1$ID <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1) )
+rownames(colData_pST_Set1) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pST_Set1) #)
+colnames(colData_pST_Set1) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pST_Set1$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pST_Set1) #)
+colData_pST_Set1$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pST_Set1) #)
 
 pST_se_Set1 <- SummarizedExperiment(assays = assay_data_pST_Set1,
                            colData = colData_pST_Set1,
@@ -1085,50 +1552,7 @@ validObject(pST_se_Set1)
 pST_se_Set1
 ```
 
-###### One shot
-```{r}
-# Assay data
-assay_data_pST_Set1_oneshot <- 
-  pST_Set1_oneshot_form %>% 
-  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
-  as.data.frame() %>% 
-  column_to_rownames("coln") %>%
-  select( -Annotated_Sequence, -HGNC_Symbol, 
-         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
-  as.matrix()
-
-colnames(assay_data_pST_Set1_oneshot) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1_oneshot) )
-
-# RowData
-rowData_pST_Set1_oneshot <- 
-  pST_Set1_oneshot_form %>%
-  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
-  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
-  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
-         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
-  as.data.frame() %>% 
-  column_to_rownames("coln")
-
-
-# ColData
-colData_pST_Set1_oneshot <- 
-  str_split( gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1_oneshot) ), pattern = "_", simplify = TRUE ) %>%
-  as.data.frame()
-rownames(colData_pST_Set1_oneshot) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1_oneshot) )
-colnames(colData_pST_Set1_oneshot) <- c("condition", "day", "replicate", "set" )
-colData_pST_Set1_oneshot$label <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1_oneshot) )
-colData_pST_Set1_oneshot$ID <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set1_oneshot) )
-
-pST_se_Set1_oneshot <- SummarizedExperiment(assays = assay_data_pST_Set1_oneshot,
-                           colData = colData_pST_Set1_oneshot,
-                           rowData = rowData_pST_Set1_oneshot)
-validObject(pST_se_Set1_oneshot)
-pST_se_Set1_oneshot
-```
-
-
-
-##### Set 2
+###### Set 2
 ```{r}
 # Assay data
 assay_data_pST_Set2 <- 
@@ -1140,7 +1564,7 @@ assay_data_pST_Set2 <-
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
   as.matrix()
 
-colnames(assay_data_pST_Set2) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set2) )
+#colnames(assay_data_pST_Set2) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set2) )
 
 # RowData
 rowData_pST_Set2 <- 
@@ -1155,12 +1579,18 @@ rowData_pST_Set2 <-
 
 # ColData
 colData_pST_Set2 <- 
-  str_split( gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set2) ), pattern = "_", simplify = TRUE ) %>%
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pST_Set2 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
   as.data.frame()
-rownames(colData_pST_Set2) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set2) )
-colnames(colData_pST_Set2) <- c("condition", "day", "replicate", "set" )
-colData_pST_Set2$label <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set2) )
-colData_pST_Set2$ID <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set2) )
+rownames(colData_pST_Set2) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pST_Set2) #)
+colnames(colData_pST_Set2) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pST_Set2$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pST_Set2) #)
+colData_pST_Set2$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pST_Set2) #)
 
 pST_se_Set2 <- SummarizedExperiment(assays = assay_data_pST_Set2,
                            colData = colData_pST_Set2,
@@ -1170,24 +1600,267 @@ pST_se_Set2
 ```
 
 
-### Median center
+###### Set 3
 ```{r}
-pY_mat_normtomedian <- t(log2(t(2^pY_mat)/colMedians(2^pY_mat) ))
-pST_mat_normtomedian <- t(log2(t(2^pST_mat)/colMedians(2^pST_mat) ))
-#prot_mat_normtomedian <- t(log2(t(2^prot_mat)/colMedians(2^prot_mat) ))
+# Assay data
+assay_data_pST_Set3 <- 
+  pST_Set3_form %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
 
-pY_mat_normtomedian[1:5,1:5]
-pST_mat_normtomedian[1:5,1:5]
+#colnames(assay_data_pST_Set3) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set3) )
+
+# RowData
+rowData_pST_Set3 <- 
+  pST_Set3_form %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pST_Set3 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pST_Set3 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pST_Set3) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pST_Set3) #)
+colnames(colData_pST_Set3) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pST_Set3$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pST_Set3) #)
+colData_pST_Set3$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pST_Set3) #)
+
+pST_se_Set3 <- SummarizedExperiment(assays = assay_data_pST_Set3,
+                           colData = colData_pST_Set3,
+                           rowData = rowData_pST_Set3)
+validObject(pST_se_Set3)
+pST_se_Set3
 ```
 
+
+###### Set 4
+```{r}
+# Assay data
+assay_data_pST_Set4 <- 
+  pST_Set4_form %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pST_Set4) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set4) )
+
+# RowData
+rowData_pST_Set4 <- 
+  pST_Set4_form %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pST_Set4 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pST_Set4 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pST_Set4) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pST_Set4) #)
+colnames(colData_pST_Set4) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pST_Set4$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pST_Set4) #)
+colData_pST_Set4$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pST_Set4) #)
+
+pST_se_Set4 <- SummarizedExperiment(assays = assay_data_pST_Set4,
+                           colData = colData_pST_Set4,
+                           rowData = rowData_pST_Set4)
+validObject(pST_se_Set4)
+pST_se_Set4
+```
+
+###### Set 5 norm to Xenograft #1
+```{r}
+# Assay data
+assay_data_pST_Set5_normXenograft1 <- 
+  pST_Set5_normXenograft1_form %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pST_Set5_normXenograft1) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set5_normXenograft1) )
+
+# RowData
+rowData_pST_Set5_normXenograft1 <- 
+  pST_Set5_normXenograft1_form %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pST_Set5_normXenograft1 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pST_Set5_normXenograft1 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pST_Set5_normXenograft1) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pST_Set5_normXenograft1) #)
+colnames(colData_pST_Set5_normXenograft1) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pST_Set5_normXenograft1$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pST_Set5_normXenograft1) #)
+colData_pST_Set5_normXenograft1$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pST_Set5_normXenograft1) #)
+
+pST_se_Set5_normXenograft1 <- SummarizedExperiment(assays = assay_data_pST_Set5_normXenograft1,
+                           colData = colData_pST_Set5_normXenograft1,
+                           rowData = rowData_pST_Set5_normXenograft1)
+validObject(pST_se_Set5_normXenograft1)
+pST_se_Set5_normXenograft1
+```
+
+###### Set 5 norm to Xenograft #14
+```{r}
+# Assay data
+assay_data_pST_Set5_normXenograft14 <- 
+  pST_Set5_normXenograft14_form %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pST_Set5_normXenograft14) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pST_Set5_normXenograft14) )
+
+# RowData
+rowData_pST_Set5_normXenograft14 <- 
+  pST_Set5_normXenograft14_form %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pST_Set5_normXenograft14 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pST_Set5_normXenograft14 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pST_Set5_normXenograft14) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pST_Set5_normXenograft14) #)
+colnames(colData_pST_Set5_normXenograft14) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pST_Set5_normXenograft14$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pST_Set5_normXenograft14) #)
+colData_pST_Set5_normXenograft14$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pST_Set5_normXenograft14) #)
+
+pST_se_Set5_normXenograft14 <- SummarizedExperiment(assays = assay_data_pST_Set5_normXenograft14,
+                           colData = colData_pST_Set5_normXenograft14,
+                           rowData = rowData_pST_Set5_normXenograft14)
+validObject(pST_se_Set5_normXenograft14)
+pST_se_Set5_normXenograft14
+```
+
+### Median center
+#### pY
+##### Combined
+```{r}
+pY_Xenograft1_mat_normtomedian <- t(log2(t(2^pY_Xenograft1_mat)/colMedians(2^pY_Xenograft1_mat) ))
+pY_Xenograft1_mat_normtomedian[1:5,1:5]
+
+pY_Xenograft14_mat_normtomedian <- t(log2(t(2^pY_Xenograft14_mat)/colMedians(2^pY_Xenograft14_mat) ))
+pY_Xenograft14_mat_normtomedian[1:5,]
+```
+
+##### Individual sets
+```{r}
+pY_mat_Set1_normtomedian <- t(log2(t(2^pY_mat_Set1)/colMedians(2^pY_mat_Set1) ))
+pY_mat_Set1_normtomedian[1:5,1:5]
+
+#pY_mat_Set2_normtomedian <- t(log2(t(2^pY_mat_Set2)/colMedians(2^pY_mat_Set2) ))
+#pY_mat_Set2_normtomedian[1:5,1:5]
+
+pY_mat_Set3_normtomedian <- t(log2(t(2^pY_mat_Set3)/colMedians(2^pY_mat_Set3) ))
+pY_mat_Set3_normtomedian[1:5,1:5]
+
+pY_mat_Set4_normtomedian <- t(log2(t(2^pY_mat_Set4)/colMedians(2^pY_mat_Set4) ))
+pY_mat_Set4_normtomedian[1:5,1:5]
+
+pY_mat_Set5_normXenograft1_normtomedian <- t(log2(t(2^pY_mat_Set5_normXenograft1)/colMedians(2^pY_mat_Set5_normXenograft1) ))
+pY_mat_Set5_normXenograft1_normtomedian[1:5,1:5]
+
+pY_mat_Set5_normXenograft14_normtomedian <- t(log2(t(2^pY_mat_Set5_normXenograft14)/colMedians(2^pY_mat_Set5_normXenograft14) ))
+pY_mat_Set5_normXenograft14_normtomedian[1:5,1:5]
+```
+
+
+
+#### pST
+##### Combined
+```{r}
+pST_Xenograft1_mat_normtomedian <- t(log2(t(2^pST_Xenograft1_mat)/colMedians(2^pST_Xenograft1_mat) ))
+pST_Xenograft1_mat_normtomedian[1:5,1:5]
+
+#pST_Xenograft14_mat_normtomedian <- t(log2(t(2^pST_Xenograft14_mat)/colMedians(2^pST_Xenograft14_mat) ))
+#pST_Xenograft14_mat_normtomedian[1:5,1:5]
+```
+
+##### Individual sets
+```{r}
+pST_mat_Set1_normtomedian <- t(log2(t(2^pST_mat_Set1)/colMedians(2^pST_mat_Set1) ))
+pST_mat_Set1_normtomedian[1:5,1:5]
+
+pST_mat_Set2_normtomedian <- t(log2(t(2^pST_mat_Set2)/colMedians(2^pST_mat_Set2) ))
+pST_mat_Set2_normtomedian[1:5,1:5]
+
+pST_mat_Set3_normtomedian <- t(log2(t(2^pST_mat_Set3)/colMedians(2^pST_mat_Set3) ))
+pST_mat_Set3_normtomedian[1:5,1:5]
+
+pST_mat_Set4_normtomedian <- t(log2(t(2^pST_mat_Set4)/colMedians(2^pST_mat_Set4) ))
+pST_mat_Set4_normtomedian[1:5,1:5]
+
+pST_mat_Set5_normXenograft1_normtomedian <- t(log2(t(2^pST_mat_Set5_normXenograft1)/colMedians(2^pST_mat_Set5_normXenograft1) ))
+pST_mat_Set5_normXenograft1_normtomedian[1:5,1:5]
+
+pST_mat_Set5_normXenograft14_normtomedian <- t(log2(t(2^pST_mat_Set5_normXenograft14)/colMedians(2^pST_mat_Set5_normXenograft14) ))
+pST_mat_Set5_normXenograft14_normtomedian[1:5,1:5]
+```
 
 # Save workspace
 ```{r}
-save.image(file = "../Data/Cache/Xenografts_Batch1_2_DataProcessing.RData")
-save(pY_noNA, pST_noNA, #prot_top3peptidemedian,
-     pY_Set1, pY_Set2,
-     pST_Set1, pST_Set2,
-     pST_Set1_oneshot_form,
-     file = "../Data/Cache/CRC_Batch1_2_Shiny.RData")
+save.image(file = "../Data/Cache/Xenografts_Batch2_DataProcessing.RData")
 ```
 
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

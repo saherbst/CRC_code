@@ -1,0 +1,118 @@
+---
+title: "Differential phospho analysis - CRC Batch 2 Set 2"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+CRC_Xenografts_Batch2_DataProcessing Script
+
+```{r}
+load("../Data/Cache/Xenografts_Batch2_DataProcessing.RData")
+```
+
+# TODO
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+source("../../../General/Code/Analysis_Functions.R")
+source("CRC_Xenografts_Batch2_Functions.R")
+```
+
+# Analysis
+## DEP
+### Serine/Threonine all
+#### Each condition vs ctrl
+```{r, eval=TRUE}
+data_diff_ctrl_vs_E_pST <- test_diff(pST_se_Set2, type="manual", test = "E_vs_ctrl")
+dep_ctrl_vs_E_pST <- add_rejections_SH(data_diff_ctrl_vs_E_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_ctrl_vs_E_pST, contrast = "E_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pST") 
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_ctrl_vs_E_pST, comparison = "E_vs_ctrl_diff")
+```
+
+```{r}
+data_diff_EC_vs_ctrl_pST <- test_diff(pST_se_Set2, type="manual", test = "EC_vs_ctrl")
+dep_EC_vs_ctrl_pST <- add_rejections_SH(data_diff_EC_vs_ctrl_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EC_vs_ctrl_pST, contrast = "EC_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pST") 
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EC_vs_ctrl_pST, comparison = "EC_vs_ctrl_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pST, comparison = "EC_vs_ctrl_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_EBC_vs_ctrl_pST <- test_diff(pST_se_Set2, type="manual", test = "EBC_vs_ctrl")
+dep_EBC_vs_ctrl_pST <- add_rejections_SH(data_diff_EBC_vs_ctrl_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EBC_vs_ctrl_pST, contrast = "EBC_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EBC_vs_ctrl_pST, comparison = "EBC_vs_ctrl_diff")
+```
+
+
+#### EC vs E
+```{r}
+data_diff_EC_vs_E_pST <- test_diff(pST_se_Set2, type = "manual", 
+                              test = c("EC_vs_E"))
+dep_EC_vs_E_pST <- add_rejections_SH(data_diff_EC_vs_E_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EC_vs_E_pST, contrast = "EC_vs_E",  add_names = TRUE, additional_title = "pST", proteins_of_interest = "EGFR")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EC_vs_E_pST, comparison = "EC_vs_E_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### EBC vs EC
+```{r}
+data_diff_EBC_vs_EC_pST <- test_diff(pST_se_Set2, type = "manual", 
+                              test = c("EBC_vs_EC"))
+dep_EBC_vs_EC_pST <- add_rejections_SH(data_diff_EBC_vs_EC_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EBC_vs_EC_pST, contrast = "EBC_vs_EC",  add_names = TRUE, additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EBC_vs_EC_pST, comparison = "EBC_vs_EC_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

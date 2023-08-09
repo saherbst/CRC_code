@@ -1,0 +1,78 @@
+---
+title: "Heatmaps - CRC Batch 2 Set 4"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+CRC_Xenografts_Batch2_DataProcessing Script
+
+```{r}
+load("../Data/Cache/Xenografts_Batch2_DataProcessing.RData")
+```
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+source("../../../General/Code/Analysis_Functions.R")
+source("CRC_Xenografts_Batch2_Functions.R")
+```
+
+# Analysis
+## Heatmaps median centered log2 fold change
+### Phospho-Tyrosines 
+```{r, fig.height=8, fig.width=10, eval=TRUE}
+sample_annotation_df <- tibble( sample = rownames(
+  pY_mat_Set4_normtomedian
+  ) ) %>% 
+   separate(col = sample, sep = "_", 
+                   into = c("log2FC", "xenograft", "treatment", 
+                            "timepoint", "replicate", "set" ), remove = F) %>%
+  column_to_rownames("sample") %>% select(-log2FC)
+
+t(pY_mat_Set4_normtomedian) %>% 
+  plot_centered_heatmaply_around_nochange(
+    labCol = sub("log2FC_", "", rownames(pY_mat_Set4_normtomedian)),
+    col_side_colors = sample_annotation_df)
+```
+
+### Phospho-Serines/Threonines 
+```{r, fig.height=8, fig.width=10}
+sample_annotation_df <- tibble( sample = rownames(
+  pST_mat_Set4_normtomedian
+  ) ) %>% 
+   separate(col = sample, sep = "_", 
+                   into = c("log2FC", "xenograft", "treatment", 
+                            "timepoint", "replicate", "set" ), remove = F) %>%
+  column_to_rownames("sample") %>% select(-log2FC)
+
+t(pST_mat_Set4_normtomedian) %>% 
+  plot_centered_heatmaply_around_nochange(
+    labCol = sub("log2FC_", "", rownames(
+      pST_mat_Set4_normtomedian
+      )),
+    col_side_colors = sample_annotation_df)
+```
+
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```

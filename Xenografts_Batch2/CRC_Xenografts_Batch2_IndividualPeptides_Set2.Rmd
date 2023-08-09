@@ -1,0 +1,122 @@
+---
+title: "Plotting individual peptides - CRC Batch 2 Set 2"
+author: Sophie Herbst
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+Analysis date: `r Sys.Date()`
+
+# Depends on
+CRC_Xenografts_Batch2_DataProcessing Script
+
+```{r}
+load("../Data/Cache/Xenografts_Batch2_DataProcessing.RData")
+```
+
+# TODO
+
+# Setup
+## Load libraries and functions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(2022)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(DEP)
+library(SummarizedExperiment)
+# library(pls)
+library(mdatools)
+source("../../../General/Code/Analysis_Functions.R")
+source("CRC_Xenografts_Batch2_Functions.R")
+```
+
+# Barplots
+
+## Individual peptides
+### Cherry picked for xenograft 4
+```{r, eval=FALSE}
+plot_barplot_phos( dat= pY_Set2_form, prot = "RET", add_title = "pY" )
+plot_boxplot_phos( dat= pY_Set2_form, prot = "RET", add_title = "pY" , specific_peptide = "RRDyLDLAASTPSDSLIYDDGLSEEETPLVDCNNAPLPR")
+plot_barplot_phos( dat= pY_Set2_form, prot = "BCAR1", add_title = "pY" )
+#plot_boxplot_phos( dat= pY_Set2_form, prot = "BCAR1", add_title = "pY" , specific_peptide = "HLLAPGPQDIyDVPPVR")
+plot_barplot_phos( dat= pY_Set2_form, prot = "PXN", add_title = "pY" )
+plot_barplot_phos( dat= pY_Set2_form, prot = "NEDD9", add_title = "pY" )
+plot_barplot_phos( dat= pY_Set2_form, prot = "LYN", add_title = "pY" )
+plot_boxplot_phos( dat= pY_Set2_form, prot = "LYN", add_title = "pY" , specific_peptide = "AEERPTFDYLQSVLDDFyTATEGQYQQQP")
+plot_barplot_phos( dat= pY_Set2_form, prot = "MAPK3", add_title = "pY" )
+plot_boxplot_phos( dat= pY_Set2_form, prot = "MAPK3", add_title = "pY" , specific_peptide = "IADPEHDHTGFLtEyVATR")
+plot_barplot_phos( dat= pY_Set2_form, prot = "MAPK1", add_title = "pY" )
+plot_boxplot_phos( dat= pY_Set2_form, prot = "MAPK1", add_title = "pY" , specific_peptide = "VADPDHDHTGFLtEyVATR")
+plot_barplot_phos( dat= pY_Set2_form, prot = "DDR1", add_title = "pY" )
+plot_barplot_phos( dat= pY_Set2_form, prot = "EGFR", add_title = "pY" )
+#plot_boxplot_phos( dat= pY_Set2_form, prot = "DDR1", add_title = "pY" , specific_peptide = "")
+
+plot_barplot_phos( dat= pY_Set2_form, prot = "SRC", add_title = "pY" )
+plot_barplot_phos( dat= pY_Set2_form, prot = "ERBB2", add_title = "pY" )
+plot_barplot_phos( dat= pY_Set2_form, prot = "SYK", add_title = "pY" )
+
+plot_barplot_phos( dat= pY_Set2_form, prot = "CD163", add_title = "pY Monocyte/macrophage marker" )
+```
+
+## BRAF
+```{r}
+#plot_barplot_phos( dat= pY_Set2_form, prot = "BRAF", add_title = "pY" )
+plot_barplot_phos( dat= pST_Set2_form, prot = "BRAF", add_title = "pST" )
+plot_boxplot_phos( dat= pST_Set2_form, prot = "BRAF", add_title = "pST" )
+
+#plot_barplot_phos( dat= pY_Set2_form, prot = "RAF1", add_title = "pY" )
+plot_barplot_phos( dat= pST_Set2_form, prot = "RAF1", add_title = "pST" )
+```
+
+# Phosphoryation sites
+## Differential peptides Xenograft 4
+```{r, eval=FALSE}
+DT::datatable( all_pY_sites %>% 
+  filter(HGNC_Symbol %in% c("RET", "GAREM1", "PXN", "NEDD9", "PTPN11", "BCAR1", 
+                            "BRAF", "EGFR", "SRC") ) )
+
+DT::datatable( all_pST_sites %>% 
+  filter(HGNC_Symbol %in% c("BRAF") ) )
+
+DT::datatable(  all_pY_sites %>% 
+  filter(Annotated_Sequence %in%
+c("VGPGyLGSGGSR", "DVYEEDSyVKR", # RET
+"TDTNPSESTPVSCyPCNR", "SASySLESTDVK", "QWTTITAHSLEEGHyVIGPK", # GAREM1
+"TGHGYVyEYPSR" , # NEDD9
+"VGEEEHVySFPNK" , # PXN
+"RPGPGTLyDVPR", # BCAR1
+"IQNTGDyYDLYGGEK", "yKNILPFDHTR" # PTPN11
+) ) %>% arrange(HGNC_Symbol)  )
+
+DT::datatable(  all_pY_sites %>% 
+  filter(HGNC_Symbol %in% c("RET")) )
+```
+
+# MAPK substrates (s/t P) Phospho-serines/threonines
+```{r}
+pST_Set2_form %>%
+  filter( str_detect( Annotated_Sequence, "(s|t)P" ) ) %>%
+  pivot_longer(contains("Xenograft"), names_to = "sample", values_to = "log2FC") %>%
+  mutate(sample = str_remove(sample, "log2FC_")) %>%
+  separate(sample, sep = "_", into = c("xenograft", "treatment", "timepoint", "replicate", "set"  ), remove = F) %>%
+  mutate(treatment = as.factor(treatment)) %>%
+  mutate(treatment = factor(treatment, levels = c("ctrl", "E", "EC", "EBC"))) %>%
+  ggplot(aes( sample,log2FC, fill = treatment)) +
+  geom_violin() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90),
+        axis.title.x = element_blank()) +
+  scale_fill_manual(values = PGPalette[c(5,1,2,4)]) 
+```
+
+# Session Info
+```{r}
+sessionInfo()
+knitr::knit_exit()
+```
