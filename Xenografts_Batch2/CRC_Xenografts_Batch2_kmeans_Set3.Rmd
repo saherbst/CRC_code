@@ -73,9 +73,9 @@ KMeans_Find_Nr_Clusters_elbow(mat_kmean_pY, c_max = 30)
 ## Perform k-means
 
 ```{r}
-pST_kmeans = kmeans(mat_kmean_pY, centers = 6, nstart = 200, iter.max = 10)
-cluster_df_pY <-  tibble("cluster" = pST_kmeans$cluster)
-cluster_df_pY$peptide <- names(pST_kmeans$cluster)
+pY_kmeans = kmeans(mat_kmean_pY, centers = 6, nstart = 200, iter.max = 10)
+cluster_df_pY <-  tibble("cluster" = pY_kmeans$cluster)
+cluster_df_pY$peptide <- names(pY_kmeans$cluster)
 kmeans_tb_pY <- left_join(kmeans_tb_pY, cluster_df_pY)
 ```
 

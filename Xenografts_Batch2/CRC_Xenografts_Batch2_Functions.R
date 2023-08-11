@@ -90,7 +90,10 @@ Run_GSEA <- function(DEP_result, comparison){
   pathways <- reactomePathways(names(ranked_vector))
   fgseaRes <- fgsea(pathways, ranked_vector, maxSize=500)
   
-  print(head(fgseaRes))
+  #print(head(fgseaRes))
+  if(nrow(fgseaRes  )>1 ){
+    DT::datatable(fgseaRes) %>% DT::formatRound(c(2,3,4,5,6), 3)
+  }
   
   topPathwaysUp <- fgseaRes[ES > 0][head(order(pval), n=10), pathway]
   topPathwaysDown <- fgseaRes[ES < 0][head(order(pval), n=10), pathway]
@@ -329,17 +332,6 @@ GGPlotly_Volcano_Test <- function(tested_pdata, proteins_of_interest = FALSE,
   plotly::ggplotly(p) 
 }
 
-plot_centered_heatmaply_around_nochange <- function(val_pmap, midpoint = 0, 
-                                                    showticklabels = c(TRUE, FALSE), plot_method = "ggplot", ...){
-  min_br <- -( max(abs( min(val_pmap)), abs(max(val_pmap))) ) 
-  max_br <- max(abs( min(val_pmap)), abs(max(val_pmap))) 
-  val_pmap %>% 
-    heatmaply::heatmaply(scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(low = "navy", high = "firebrick3", 
-                                                                                 midpoint = midpoint, 
-                                                                                 limits = c(min_br+midpoint, max_br+midpoint) ), 
-                         column_text_angle = 90, showticklabels = showticklabels, plot_method = plot_method, ...)
-}
-
 KMeans_Find_Nr_Clusters_elbow <- function(mat_kmean, c_max = 20){
   kclusts <- 
     dplyr::tibble(n_clusts = 1:c_max) %>%
@@ -371,11 +363,4 @@ KMeans_Find_Nr_Clusters_elbow <- function(mat_kmean, c_max = 20){
     geom_point() +
     theme_bw() +
     ggplot2::ggtitle("Total within sum of squares, by # clusters")
-}
-
-Plot_StringDB <- function(hits){
-  hits <- as.data.frame(hits)
-  colnames(hits) <- "HGNC_Symbol"
-  hits_mapped <- string_db$map( hits, "HGNC_Symbol", removeUnmappedRows = TRUE )
-  string_db$plot_network( hits_mapped)
 }
