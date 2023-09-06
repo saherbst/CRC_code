@@ -96,6 +96,56 @@ pY_Set2_form %>%
   scale_fill_manual(values = PGPalette[c(5, 1, 2, 4)])
 ```
 
+
+##### Colored by treatment pST
+```{r}
+pST_Set2_form %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_"), drop = F) %>%
+  separate( Sample , into = c("xenograft", "treatment", "day", "replicate", "set"), sep = "_", remove = F) %>%
+  mutate(treatment=as.factor(treatment)) %>%
+  mutate(treatment=factor(treatment, levels =  c( "ctrl", "E", "EC", "EBC") )) %>%
+  ggplot(aes(value, fill= treatment, group = Sample)) +
+  #geom_histogram(bins= 200) +
+  geom_density(alpha=0.5) +
+  ggtitle("log2FC to normal") +
+  theme_bw() +
+  scale_fill_manual(values = PGPalette[c(5, 1, 2, 4)])
+
+pST_Set2_form %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_")) %>%
+  separate( Sample , into = c( "xenograft", "treatment", "day", "replicate", "set"), sep = "_", remove = F) %>%
+  mutate(treatment=as.factor(treatment)) %>%
+  mutate(treatment=factor(treatment, levels =  c( "ctrl", "E", "EC", "EBC") )) %>%
+  ggplot(aes(Sample, value, fill= treatment)) +
+  geom_boxplot() +
+  ggtitle("log2FC to normal") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_fill_manual(values = PGPalette[c(5, 1, 2, 4)])
+
+pST_Set2_form %>%
+  select(contains("log2FC")) %>%
+  pivot_longer(names_to = "Sample", cols = everything()) %>%
+  mutate(Sample = str_remove(Sample, "log2FC_")) %>%
+  separate( Sample , into = c( "xenograft", "treatment", "day", "replicate", "set"), sep = "_", remove = F) %>%
+  mutate(treatment=as.factor(treatment)) %>%
+  mutate(treatment=factor(treatment, levels =  c( "ctrl", "E", "EC", "EBC") )) %>%
+  group_by(Sample, treatment, day, replicate, set) %>%
+  summarise(mean_value = mean(value)) %>%
+  ggplot(aes(treatment, mean_value, fill= treatment)) +
+  geom_boxplot() +
+  ggbeeswarm::geom_beeswarm() +
+  ggtitle("log2FC to normal") +
+  ggpubr::stat_compare_means() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_fill_manual(values = PGPalette[c(5, 1, 2, 4)])
+```
+
 # Session Info
 ```{r}
 sessionInfo()
