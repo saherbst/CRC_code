@@ -182,6 +182,41 @@ Return_DEP_Hits_Plots(data = pST_Set4_form, dep_EBC_vs_EC_pST, comparison = "EBC
 #data_results <- get_df_long(dep)
 ```
 
+# Save
+```{r}
+rowData(dep_ctrl_vs_E_pY) %>% as_tibble() %>% select(HGNC_Symbol, E_vs_ctrl_diff) %>% write.table("../Data/Kinase_enrichment/Batch2_Set4_E_vs_ctrl_pY_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+rowData(dep_EC_vs_ctrl_pY) %>% as_tibble() %>% select(HGNC_Symbol, EC_vs_ctrl_diff) %>% write.table("../Data/Kinase_enrichment/Batch2_Set4_EC_vs_ctrl_pY_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+
+rowData(dep_ctrl_vs_E_pY) %>% as_tibble() %>% 
+  select(HGNC_Symbol, ends_with("_diff")) %>%
+  group_by(HGNC_Symbol) %>%
+  mutate(abs_FC = abs(E_vs_ctrl_diff) ) %>%
+  arrange(desc( abs_FC) ) %>%
+  slice(1) %>%
+  ungroup() %>%
+  select(HGNC_Symbol, ends_with("_diff") ) %>%
+  write.table("../Data/Kinase_enrichment/Batch2_Set4_E_vs_ctrl_pY_mostextremeFCperprotein_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+
+rowData(dep_EC_vs_ctrl_pY) %>% as_tibble() %>% 
+  select(HGNC_Symbol, ends_with("_diff")) %>%
+  group_by(HGNC_Symbol) %>%
+  mutate(abs_FC = abs(EC_vs_ctrl_diff) ) %>%
+  arrange(desc( abs_FC) ) %>%
+  slice(1) %>%
+  ungroup() %>%
+  select(HGNC_Symbol, ends_with("_diff") ) %>%
+  write.table("../Data/Kinase_enrichment/Batch2_Set4_EC_vs_ctrl_pY_mostextremeFCperprotein_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+
+rowData(dep_ctrl_vs_E_pY) %>% as_tibble() %>% 
+  filter(E_vs_ctrl_diff>1) %>%
+  select(HGNC_Symbol ) %>% unique() %>%
+  write.table("../Data/Kinase_enrichment/Batch2_Set4_E_vs_ctrl_pY_FCmorethan1_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+
+rowData(dep_EC_vs_ctrl_pY) %>% as_tibble() %>% 
+  filter(EC_vs_ctrl_diff>1) %>%
+  select(HGNC_Symbol ) %>% unique() %>%
+  write.table("../Data/Kinase_enrichment/Batch2_Set4_EC_vs_ctrl_pY_FCmorethan1_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+```
 
 # Session Info
 ```{r}

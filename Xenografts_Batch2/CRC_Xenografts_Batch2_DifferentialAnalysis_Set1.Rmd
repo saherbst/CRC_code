@@ -182,6 +182,18 @@ Return_DEP_Hits_Plots(data = pST_Set1_form, dep_EBC_vs_EC_pST, comparison = "EBC
 #data_results <- get_df_long(dep)
 ```
 
+# Save
+```{r}
+rowData(dep_ctrl_vs_E_pY) %>% as_tibble() %>% 
+  filter(E_vs_ctrl_diff>1) %>%
+  select(HGNC_Symbol ) %>% unique() %>%
+  write.table("../Data/Kinase_enrichment/Batch2_Set1_E_vs_ctrl_pY_FCmorethan1_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+
+rowData(dep_EC_vs_ctrl_pY) %>% as_tibble() %>% 
+  filter(EC_vs_ctrl_diff>1) %>%
+  select(HGNC_Symbol ) %>% unique() %>%
+  write.table("../Data/Kinase_enrichment/Batch2_Set1_EC_vs_ctrl_pY_FCmorethan1_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+```
 
 # Session Info
 ```{r}
