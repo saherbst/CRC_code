@@ -1572,8 +1572,12 @@ border-radius: 0px;
 </div>
 
 
-<p>Analysis date: 2023-08-07</p>
+<p>Analysis date: 2023-09-06</p>
 <p>CRC Xenografts # 1 and #14</p>
+<div id="todo" class="section level1">
+<h1>TODO</h1>
+<p>Individual sets: Do not normalise to bridge.</p>
+</div>
 <div id="setup" class="section level1">
 <h1>Setup</h1>
 <div id="load-libraries-and-functions" class="section level2">
@@ -3452,6 +3456,8 @@ all_pY_sites$SITE_GRP_ID &lt;- as.double( apply(all_pY_sites,1, function(x){ Ret
 </div>
 <div id="pst-3" class="section level4">
 <h4>pST</h4>
+<div id="old" class="section level5">
+<h5>Old</h5>
 <pre class="r"><code># TODO How to deal with peptides which have multiple phosphorylations?
 
 all_pST_sites &lt;- bind_rows(
@@ -3460,9 +3466,8 @@ all_pST_sites &lt;- bind_rows(
   pST_Set3_form %&gt;% select(HGNC_Symbol, Annotated_Sequence),
   pST_Set4_form %&gt;% select(HGNC_Symbol, Annotated_Sequence),
   pST_Set5_normXenograft1_form %&gt;% select(HGNC_Symbol, Annotated_Sequence)) %&gt;% unique
-if(!all(str_count(all_pST_sites$Annotated_Sequence, &quot;s|t&quot;) == 1)){warning(&quot;There are peptides with multiple pST sites&quot;)}</code></pre>
-<pre><code>## Warning: There are peptides with multiple pST sites</code></pre>
-<pre class="r"><code>tmp_sequence &lt;- paste0(&quot;jjjjjjj&quot;, all_pST_sites$Annotated_Sequence,&quot;jjjjjjj&quot; )
+if(!all(str_count(all_pST_sites$Annotated_Sequence, &quot;s|t&quot;) == 1)){warning(&quot;There are peptides with multiple pST sites&quot;)}
+tmp_sequence &lt;- paste0(&quot;jjjjjjj&quot;, all_pST_sites$Annotated_Sequence,&quot;jjjjjjj&quot; )
 position_pST_phos &lt;- str_locate(tmp_sequence, &quot;s|t&quot;)[,1]
 tmp_sequence &lt;- str_sub(tmp_sequence, (position_pST_phos-7), position_pST_phos + 7)
 tmp_sequence &lt;- paste0( str_to_upper(str_sub(tmp_sequence,1,7 )), 
@@ -3503,24 +3508,84 @@ Return_SITE_GRP_ID &lt;- function(HGNC_Symbol, Modified_Sequence){
 
 all_pST_sites$DOMAIN &lt;- apply(all_pST_sites,1, function(x){ Return_DOMAIN(x[1], x[3] )}  )
 all_pST_sites$MOD_RSD &lt;- apply(all_pST_sites,1, function(x){ Return_MOD_RSD(x[1], x[3] )}  )
-all_pST_sites$SITE_GRP_ID &lt;- as.double( apply(all_pST_sites,1, function(x){ Return_SITE_GRP_ID(x[1], x[3] )}  ) )</code></pre>
-<pre><code>## Warning: NAs introduced by coercion</code></pre>
-<pre class="r"><code>all_pST_sites &lt;- left_join(all_pST_sites,
+all_pST_sites$SITE_GRP_ID &lt;- as.double( apply(all_pST_sites,1, function(x){ Return_SITE_GRP_ID(x[1], x[3] )}  ) )
+
+all_pST_sites &lt;- left_join(all_pST_sites,
           kinase_substrate_dataset %&gt;% select(GENE, KINASE, SUBSTRATE, SUB_GENE, SUB_MOD_RSD, SITE_GRP_ID),
-          by= &quot;SITE_GRP_ID&quot;)</code></pre>
-<pre><code>## Warning in left_join(all_pST_sites, kinase_substrate_dataset %&gt;% select(GENE, : Detected an unexpected many-to-many relationship between `x` and `y`.
-## ℹ Row 126 of `x` matches multiple rows in `y`.
-## ℹ Row 1793 of `y` matches multiple rows in `x`.
-## ℹ If a many-to-many relationship is expected, set `relationship =
-##   &quot;many-to-many&quot;` to silence this warning.</code></pre>
-<pre class="r"><code>all_pST_sites &lt;- left_join(all_pST_sites, 
+          by= &quot;SITE_GRP_ID&quot;)
+
+all_pST_sites &lt;- left_join(all_pST_sites, 
           Regulatory_sites_dataset %&gt;% filter(GENE %in% unique(all_pST_sites$HGNC_Symbol), str_detect(MOD_RSD, &quot;S|T&quot;) ) , 
           by = c( &quot;HGNC_Symbol&quot; = &quot;GENE&quot;, &quot;MOD_RSD&quot; )) </code></pre>
-<pre><code>## Warning in left_join(all_pST_sites, Regulatory_sites_dataset %&gt;% filter(GENE %in% : Detected an unexpected many-to-many relationship between `x` and `y`.
-## ℹ Row 604 of `x` matches multiple rows in `y`.
-## ℹ Row 113 of `y` matches multiple rows in `x`.
-## ℹ If a many-to-many relationship is expected, set `relationship =
-##   &quot;many-to-many&quot;` to silence this warning.</code></pre>
+</div>
+<div id="for-motif" class="section level5">
+<h5>For motif</h5>
+<pre class="r"><code>all_pST_sites &lt;- bind_rows(
+  pST_Set1 %&gt;% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`),
+  pST_Set2 %&gt;% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`),
+  pST_Set3 %&gt;% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`),
+  pST_Set4 %&gt;% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`),
+  pST_Set5_normXenograft1 %&gt;% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`)) %&gt;% unique
+if(!all(str_count(all_pST_sites$`Annotated Sequence`, &quot;s|t&quot;) == 1)){warning(&quot;There are peptides with multiple pST sites&quot;)}</code></pre>
+<pre><code>## Warning: There are peptides with multiple pST sites</code></pre>
+<pre class="r"><code>table(all_pST_sites$`Master Protein Accessions` %in% Phosphorylation_site_dataset$ACC_ID )</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##     6  2420</code></pre>
+<pre class="r"><code>Phosphorylation_site_dataset_pST &lt;- Phosphorylation_site_dataset %&gt;% filter(ACC_ID %in% all_pST_sites$`Master Protein Accessions`)
+
+# TODO: s/t in first place might have TMT and or phos
+# TODO did not account for double phosphorylated peptides
+extracted_trimmed_peptide &lt;- function(peptide){
+  str_extract(peptide, &quot;s|t&quot;)
+  
+  if( nchar( sub(&quot;[ts].*&quot;, &quot;&quot;, peptide )) &gt;= 7 &amp; 
+      nchar( sub(&quot;.*[ts]&quot;, &quot;&quot;, peptide )) &gt;= 7){
+    pep_trimmed &lt;- str_extract(peptide, &quot;.......[ts].......&quot;)
+  }else if(nchar( sub(&quot;[ts].*&quot;, &quot;&quot;, peptide )) &lt; 7 &amp;
+           nchar( sub(&quot;.*[ts]&quot;, &quot;&quot;, peptide )) &lt; 7){
+    pep_trimmed &lt;- str_extract(peptide, &quot;.*[ts].*&quot;)
+  }else if(nchar( sub(&quot;[ts].*&quot;, &quot;&quot;, peptide )) &lt; 7){
+    pep_trimmed &lt;- str_extract(peptide, &quot;.*[ts].......&quot;)
+  }else if(nchar( sub(&quot;.*[ts]&quot;, &quot;&quot;, peptide )) &lt; 7){
+    pep_trimmed &lt;- str_extract(peptide, &quot;.......[ts].*&quot;)
+  }else{stop(paste(&quot;Could not extract trimmed sequence from&quot;, peptide )) }
+  return(pep_trimmed)
+}
+
+all_pST_sites$trimmed_sequence &lt;- sapply(all_pST_sites$`Annotated Sequence`, extracted_trimmed_peptide, simplify = T)
+ 
+#peptide &lt;- all_pST_sites$trimmed_sequence[315] 
+#protein &lt;- all_pST_sites$`Master Protein Accessions`[315] 
+
+get_plusminus_7AA_sequence &lt;- function(peptide, protein){
+  mod_peptide &lt;- paste0(str_to_upper(sub(&quot;[ts].*&quot;, &quot;&quot;, peptide) ),
+         str_extract(peptide, &quot;[ts]&quot;),
+         str_to_upper(sub(&quot;.*[ts]&quot;, &quot;&quot;, peptide) ) )
+  sequ &lt;- Phosphorylation_site_dataset_pST %&gt;% filter(ACC_ID == protein) %&gt;%
+    mutate( SEQUENCE = paste0(str_to_upper(str_sub(`SITE_+/-7_AA`, 1, 7)),
+                               str_sub(`SITE_+/-7_AA`, 8,8),
+                              paste0(str_to_upper(str_sub(`SITE_+/-7_AA`, 9, 15)))) ) %&gt;% 
+    filter(str_detect(SEQUENCE, mod_peptide)) %&gt;% .$SEQUENCE
+  if(length(sequ) == 0){
+    return(NA)}else{return(sequ)}
+}
+
+sequences7AA &lt;- sapply(1:nrow(all_pST_sites), function(i){
+  sequ &lt;- get_plusminus_7AA_sequence(peptide = all_pST_sites$trimmed_sequence[i],
+                             protein = all_pST_sites$`Master Protein Accessions`[i]) %&gt;% unique
+  if(length(sequ) != 1){
+    return(NA)}else{return(sequ)}
+  }, simplify = T) 
+
+table(is.na(sequences7AA) )</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##  2199   227</code></pre>
+<pre class="r"><code>all_pST_sites$Sequence_7_AA &lt;- sequences7AA
+
+colnames(all_pST_sites)[colnames(all_pST_sites) == &quot;Annotated Sequence&quot;] &lt;- &quot;Annotated_Sequence&quot;</code></pre>
+</div>
 </div>
 </div>
 <div id="matrix" class="section level3">
@@ -5295,7 +5360,7 @@ pY_mat_Set3_normtomedian &lt;- t(log2(t(2^pY_mat_Set3)/colMedians(2^pY_mat_Set3)
 ## other attached packages:
 ##  [1] lubridate_1.9.2             forcats_1.0.0              
 ##  [3] stringr_1.5.0               dplyr_1.1.2                
-##  [5] purrr_1.0.1                 readr_2.1.4                
+##  [5] purrr_1.0.2                 readr_2.1.4                
 ##  [7] tidyr_1.3.0                 tibble_3.2.1               
 ##  [9] ggplot2_3.4.2               tidyverse_2.0.0            
 ## [11] mdatools_0.14.0             SummarizedExperiment_1.28.0
@@ -5308,14 +5373,14 @@ pY_mat_Set3_normtomedian &lt;- t(log2(t(2^pY_mat_Set3)/colMedians(2^pY_mat_Set3)
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] readxl_1.4.3           circlize_0.4.15        fastmatch_1.1-3       
-##   [4] igraph_1.5.0.1         plyr_1.8.8             gmm_1.8               
+##   [4] igraph_1.5.1           plyr_1.8.8             gmm_1.8               
 ##   [7] shinydashboard_0.7.2   BiocParallel_1.32.6    digest_0.6.33         
-##  [10] foreach_1.5.2          htmltools_0.5.5        fansi_1.0.4           
+##  [10] foreach_1.5.2          htmltools_0.5.6        fansi_1.0.4           
 ##  [13] magrittr_2.0.3         memoise_2.0.1          cluster_2.1.4         
 ##  [16] doParallel_1.0.17      tzdb_0.4.0             limma_3.54.2          
 ##  [19] ComplexHeatmap_2.14.0  Biostrings_2.66.0      vroom_1.6.3           
 ##  [22] imputeLCMD_2.1         sandwich_3.0-2         timechange_0.2.0      
-##  [25] colorspace_2.1-0       blob_1.2.4             xfun_0.39             
+##  [25] colorspace_2.1-0       blob_1.2.4             xfun_0.40             
 ##  [28] crayon_1.5.2           RCurl_1.98-1.12        jsonlite_1.8.7        
 ##  [31] impute_1.72.3          hash_2.2.6.2           zoo_1.8-12            
 ##  [34] iterators_1.0.14       glue_1.6.2             gtable_0.3.3          
@@ -5341,11 +5406,11 @@ pY_mat_Set3_normtomedian &lt;- t(log2(t(2^pY_mat_Set3)/colMedians(2^pY_mat_Set3)
 ##  [94] stringi_1.7.12         MSnbase_2.24.2         lattice_0.21-8        
 ##  [97] ProtGenerics_1.30.0    Matrix_1.6-0           tmvtnorm_1.5          
 ## [100] vctrs_0.6.3            pillar_1.9.0           norm_1.0-11.1         
-## [103] lifecycle_1.0.3        BiocManager_1.30.21.1  jquerylib_0.1.4       
+## [103] lifecycle_1.0.3        BiocManager_1.30.22    jquerylib_0.1.4       
 ## [106] MALDIquant_1.22.1      GlobalOptions_0.1.2    data.table_1.14.8     
 ## [109] cowplot_1.1.1          bitops_1.0-7           httpuv_1.6.11         
 ## [112] R6_2.5.1               pcaMethods_1.90.0      affy_1.76.0           
-## [115] promises_1.2.0.1       KernSmooth_2.23-22     codetools_0.2-19      
+## [115] promises_1.2.1         KernSmooth_2.23-22     codetools_0.2-19      
 ## [118] gtools_3.9.4           MASS_7.3-60            assertthat_0.2.1      
 ## [121] chron_2.3-61           proto_1.0.0            rjson_0.2.21          
 ## [124] withr_2.5.0            GenomeInfoDbData_1.2.9 parallel_4.2.3        

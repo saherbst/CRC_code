@@ -848,7 +848,8 @@ all_pY_sites <- left_join(all_pY_sites,
 
 
 #### pST
-```{r, eval=TRUE}
+##### Old
+```{r, eval=FALSE}
 # TODO How to deal with peptides which have multiple phosphorylations?
 
 all_pST_sites <- bind_rows(
@@ -909,6 +910,100 @@ all_pST_sites <- left_join(all_pST_sites,
           Regulatory_sites_dataset %>% filter(GENE %in% unique(all_pST_sites$HGNC_Symbol), str_detect(MOD_RSD, "S|T") ) , 
           by = c( "HGNC_Symbol" = "GENE", "MOD_RSD" )) 
 ```
+
+##### For motif
+```{r, eval=TRUE}
+all_pST_sites <- bind_rows(
+  pST_Set1 %>% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`),
+  pST_Set2 %>% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`),
+  pST_Set3 %>% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`),
+  pST_Set4 %>% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`),
+  pST_Set5_normXenograft1 %>% select(Sequence, `Annotated Sequence`, HGNC_Symbol, `Master Protein Accessions`)) %>% unique
+if(!all(str_count(all_pST_sites$`Annotated Sequence`, "s|t") == 1)){warning("There are peptides with multiple pST sites")}
+
+table(all_pST_sites$`Master Protein Accessions` %in% Phosphorylation_site_dataset$ACC_ID )
+
+Phosphorylation_site_dataset_pST <- Phosphorylation_site_dataset %>% filter(ACC_ID %in% all_pST_sites$`Master Protein Accessions`)
+
+# TODO: s/t in first place might have TMT and or phos
+# TODO did not account for double phosphorylated peptides
+extracted_trimmed_peptide <- function(peptide){
+  str_extract(peptide, "s|t")
+  
+  if( nchar( sub("[ts].*", "", peptide )) >= 7 & 
+      nchar( sub(".*[ts]", "", peptide )) >= 7){
+    pep_trimmed <- str_extract(peptide, ".......[ts].......")
+  }else if(nchar( sub("[ts].*", "", peptide )) < 7 &
+           nchar( sub(".*[ts]", "", peptide )) < 7){
+    pep_trimmed <- str_extract(peptide, ".*[ts].*")
+  }else if(nchar( sub("[ts].*", "", peptide )) < 7){
+    pep_trimmed <- str_extract(peptide, ".*[ts].......")
+  }else if(nchar( sub(".*[ts]", "", peptide )) < 7){
+    pep_trimmed <- str_extract(peptide, ".......[ts].*")
+  }else{stop(paste("Could not extract trimmed sequence from", peptide )) }
+  return(pep_trimmed)
+}
+
+all_pST_sites$trimmed_sequence <- sapply(all_pST_sites$`Annotated Sequence`, extracted_trimmed_peptide, simplify = T)
+ 
+#peptide <- all_pST_sites$trimmed_sequence[315] 
+#protein <- all_pST_sites$`Master Protein Accessions`[315] 
+
+get_plusminus_7AA_sequence <- function(peptide, protein){
+  mod_peptide <- paste0(str_to_upper(sub("[ts].*", "", peptide) ),
+         str_extract(peptide, "[ts]"),
+         str_to_upper(sub(".*[ts]", "", peptide) ) )
+  sequ <- Phosphorylation_site_dataset_pST %>% filter(ACC_ID == protein) %>%
+    mutate( SEQUENCE = paste0(str_to_upper(str_sub(`SITE_+/-7_AA`, 1, 7)),
+                               str_sub(`SITE_+/-7_AA`, 8,8),
+                              paste0(str_to_upper(str_sub(`SITE_+/-7_AA`, 9, 15)))) ) %>% 
+    filter(str_detect(SEQUENCE, mod_peptide)) %>% .$SEQUENCE
+  if(length(sequ) == 0){
+    return(NA)}else{return(sequ)}
+}
+
+sequences7AA <- sapply(1:nrow(all_pST_sites), function(i){
+  sequ <- get_plusminus_7AA_sequence(peptide = all_pST_sites$trimmed_sequence[i],
+                             protein = all_pST_sites$`Master Protein Accessions`[i]) %>% unique
+  if(length(sequ) != 1){
+    return(NA)}else{return(sequ)}
+  }, simplify = T) 
+
+table(is.na(sequences7AA) )
+
+all_pST_sites$Sequence_7_AA <- sequences7AA
+
+colnames(all_pST_sites)[colnames(all_pST_sites) == "Annotated Sequence"] <- "Annotated_Sequence"
+
+Phosphorylation_site_dataset_pST <- 
+  Phosphorylation_site_dataset %>% filter(GENE %in% all_pST_sites$HGNC_Symbol) %>%
+  filter(!str_detect(PROTEIN, "iso")) %>%
+  filter( str_detect( `SITE_+/-7_AA`, "y|t" ) ) %>% 
+  mutate(Modified_Sequence = paste0( str_to_upper(str_sub(`SITE_+/-7_AA`,1,7 )), 
+                                  str_to_lower(str_sub(`SITE_+/-7_AA`,8,8 )),
+                                  str_to_upper(str_sub(`SITE_+/-7_AA`,9,16 ))) ) %>% 
+  select(GENE, PROTEIN, HU_CHR_LOC, MOD_RSD, SITE_GRP_ID, DOMAIN, Modified_Sequence) %>%
+  unique()
+
+Return_MOD_RSD <- function(HGNC_Symbol, Modified_Sequence){
+  selprot <- Phosphorylation_site_dataset_pST %>% filter(GENE == HGNC_Symbol)
+  if(length(str_which(selprot$Modified_Sequence, Modified_Sequence))==1){
+  selsite <- selprot[ str_which(selprot$Modified_Sequence, Modified_Sequence), ]
+  return(selsite$MOD_RSD)}else{return("NA")}
+}
+
+Return_SITE_GRP_ID <- function(HGNC_Symbol, Modified_Sequence){
+  selprot <- Phosphorylation_site_dataset_pST %>% filter(GENE == HGNC_Symbol)
+  if(length(str_which(selprot$Modified_Sequence, Modified_Sequence))==1){
+  selsite <- selprot[ str_which(selprot$Modified_Sequence, Modified_Sequence), ]
+  return(selsite$SITE_GRP_ID)}else{return("NA")}
+}
+
+all_pST_sites$MOD_RSD <- str_remove( apply(all_pST_sites, 1, function(x){ Return_MOD_RSD(HGNC_Symbol = x[3], Modified_Sequence = x[6] )}  ) , "-p")
+
+all_pST_sites$SITE_GRP_ID <- as.double( apply(all_pST_sites,1, function(x){ Return_SITE_GRP_ID(HGNC_Symbol = x[3], Modified_Sequence = x[6] )}  ) )
+```
+
 
 
 

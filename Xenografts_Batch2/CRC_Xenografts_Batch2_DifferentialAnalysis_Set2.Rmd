@@ -110,6 +110,21 @@ Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EBC_vs_EC_pST, comparison = "EBC
 #data_results <- get_df_long(dep)
 ```
 
+### For Phosphosite Plus kinase enrichment
+```{r, eval=TRUE}
+EC_vs_ctrl_pST_7AA <- left_join( (rowData(dep_EC_vs_ctrl_pST) %>% as_tibble() %>% 
+  #filter(LTB4_vs_ctrl_p.adj< 0.05, LTB4_vs_ctrl_diff > 1.2) %>% 
+    select(annotation = ID, Annotated_Sequence, HGNC_Symbol, fc = EC_vs_ctrl_diff,  p = EC_vs_ctrl_p.adj) %>% unique ),
+  (all_pST_sites %>% select(Annotated_Sequence, Sequence_7_AA, HGNC_Symbol)),
+  by=c("Annotated_Sequence", "HGNC_Symbol") ) %>% filter(!is.na(Sequence_7_AA)) %>% 
+  mutate( peptide = str_to_upper(Sequence_7_AA) ) %>%
+  select(annotation, peptide, fc, p) %>% as.data.frame()
+```
+
+# Save
+```{r}
+EC_vs_ctrl_pST_7AA %>% select(peptide, fc, p)  %>% write.table(file = "../Data/Kinase_enrichment/Batch2_Set2_EC_vs_ctrl_pST_7AA.txt", quote = FALSE, row.names = F, col.names = F, sep = "\t")
+```
 
 # Session Info
 ```{r}

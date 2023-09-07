@@ -247,6 +247,33 @@ plot_barplot_prot <- function(dat, prot, add_title = "", specific_peptide = FALS
 }
 
 ### Function Boxplots
+#plot_boxplot_phos <- function(dat, prot, add_title = "", specific_peptide = FALSE){
+#  if(prot %in% dat$HGNC_Symbol){
+#    if(specific_peptide != FALSE){
+#      dat <- dat %>% filter(Annotated_Sequence == specific_peptide)
+#    }
+#    dat %>%
+#      pivot_longer(cols = 3:(ncol(dat)-2), names_to = "sample", values_to = "log2_FC") %>%
+#      mutate(sample = gsub( "log2FC_", "", sample ) ) %>%
+#      mutate(prep = unlist(prep_l[sample]) ) %>%
+#      separate( sample , into = c("xenograft", "treatment", "day", "replicate", "set"), sep = "_", remove = F) %>%
+#      filter(HGNC_Symbol == prot) %>%
+#      mutate(treatment = as.factor(treatment)) %>%
+#      mutate(treatment = factor(treatment, levels = c("ctrl", "E", "EC", "EBC") )) %>%
+#      mutate(AA_1to6 = substr(Annotated_Sequence, 1,6 ) ) %>%
+#      ggplot(aes( treatment, log2_FC, fill = treatment, group = AA_1to6 )) +
+#      geom_boxplot(aes(group = treatment, fill = treatment), outlier.size = 0 ) +
+#      ggbeeswarm::geom_beeswarm() +
+#      theme_bw() +
+#      ggtitle(paste(add_title, prot)) +
+#      scale_fill_manual(values=PGPalette[c(5,1,2, 4)]) +
+#      facet_wrap(~Annotated_Sequence+day) +
+#      theme(axis.text.x = element_text(angle = 90))
+#  }else{
+#    print(paste(prot, "was not detected in dataset", deparse(substitute(dat)) ))
+#  }
+#}
+
 plot_boxplot_phos <- function(dat, prot, add_title = "", specific_peptide = FALSE){
   if(prot %in% dat$HGNC_Symbol){
     if(specific_peptide != FALSE){
@@ -255,7 +282,7 @@ plot_boxplot_phos <- function(dat, prot, add_title = "", specific_peptide = FALS
     dat %>%
       pivot_longer(cols = 3:(ncol(dat)-2), names_to = "sample", values_to = "log2_FC") %>%
       mutate(sample = gsub( "log2FC_", "", sample ) ) %>%
-      mutate(prep = unlist(prep_l[sample]) ) %>%
+      #mutate(prep = unlist(prep_l[sample]) ) %>%
       separate( sample , into = c("xenograft", "treatment", "day", "replicate", "set"), sep = "_", remove = F) %>%
       filter(HGNC_Symbol == prot) %>%
       mutate(treatment = as.factor(treatment)) %>%
@@ -267,7 +294,8 @@ plot_boxplot_phos <- function(dat, prot, add_title = "", specific_peptide = FALS
       theme_bw() +
       ggtitle(paste(add_title, prot)) +
       scale_fill_manual(values=PGPalette[c(5,1,2, 4)]) +
-      facet_wrap(~Annotated_Sequence+day) +
+      #facet_wrap(~Annotated_Sequence+day) +
+      facet_wrap(~Annotated_Sequence) +
       theme(axis.text.x = element_text(angle = 90))
   }else{
     print(paste(prot, "was not detected in dataset", deparse(substitute(dat)) ))
