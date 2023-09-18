@@ -114,7 +114,8 @@ pY_Set1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set1,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "126") %>%
+                              norm_channel = c( "126", "127N", "127C", "128N", "128C", "129N") )  %>%
+                              #norm_channel = "126") %>%
     filter(grepl("y", `Annotated Sequence` ) )
 
 # Set 3
@@ -126,7 +127,8 @@ pY_Set3 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set3,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "127C") %>%
+                              norm_channel = c("126", "127N", "127C", "128N", "128C" ) )  %>%
+                              #norm_channel = "127C") %>%
     filter(grepl("y", `Annotated Sequence` ) )
 
 # Set 4
@@ -136,7 +138,8 @@ pY_Set4 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set4,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "126") %>%
+                              norm_channel = c("126", "127N", "127C", "128N" ) )  %>%
+                              #norm_channel = "126") %>%
     filter(grepl("y", `Annotated Sequence` ) )
 
 # Set 5
@@ -146,7 +149,8 @@ pY_Set5_normXenograft1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "131N") %>%
+                              norm_channel = c("131N", "131C", "132N" ) )  %>%
+                              #norm_channel = "131N") %>%
     filter(grepl("y", `Annotated Sequence` ) )
 
 # Set 5
@@ -156,7 +160,8 @@ pY_Set5_normXenograft14 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "134N") %>%
+                              norm_channel = c("134N", "134C", "135N" ) )  %>%
+                              #norm_channel = "134N") %>%
     filter(grepl("y", `Annotated Sequence` ) )
 ```
 
@@ -169,7 +174,8 @@ pST_Set1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set1,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "126") %>%
+                              norm_channel = c( "126", "127N", "127C", "128N", "128C", "129N") )  %>%
+                              #norm_channel = "126") %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 
 # Set 2
@@ -179,7 +185,8 @@ pST_Set2 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set2,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "128N") %>%
+                              norm_channel = c( "126", "127N", "127C", "128N", "128C") )  %>%
+                              #norm_channel = "128N") %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 
 # Set 3
@@ -189,7 +196,8 @@ pST_Set3 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set3,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "127C") %>%
+                              norm_channel = c("126", "127N", "127C", "128N", "128C" ) )  %>%
+                              #norm_channel = "127C") %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 
 # Set 4
@@ -201,7 +209,8 @@ pST_Set4 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set4,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "126") %>%
+                              norm_channel = c("126", "127N", "127C", "128N" ) )  %>%
+                              #norm_channel = "126") %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 
 # Set 5
@@ -211,7 +220,8 @@ pST_Set5_normXenograft1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pS
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "129N") %>%
+                              norm_channel = c("129N", "129C", "130N" ) )  %>%
+                              #norm_channel = "129N") %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 
 # Set 5
@@ -221,7 +231,8 @@ pST_Set5_normXenograft14 <- Filter_And_Average_PSMs(file_path_phos = file_path_p
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "132N") %>%
+                              norm_channel = c("132N", "132C", "133N" ) )  %>%
+                              #norm_channel = "132N") %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 ```
 
@@ -232,7 +243,7 @@ pST_Set5_normXenograft14 <- Filter_And_Average_PSMs(file_path_phos = file_path_p
 ### Annotation
 #### Samples
 ```{r}
-name_l_Set1 = list( #"126" = "Xenograft1_ctrl_5d_1_Set1", 
+name_l_Set1 = list( "126" = "Xenograft1_ctrl_5d_1_Set1", # this one
                "127N" = "Xenograft1_ctrl_5d_2_Set1", 
                "127C" = "Xenograft1_ctrl_5d_3_Set1", 
                "128N"	= "Xenograft1_ctrl_5d_4_Set1", 
@@ -255,7 +266,7 @@ name_l_Set1 = list( #"126" = "Xenograft1_ctrl_5d_1_Set1",
 name_l_Set2 = list( "126" = "Xenograft1_ctrl_5d_6_Set2", 
                "127N" = "Xenograft1_ctrl_5d_7_Set2", 
                "127C" = "Xenograft1_ctrl_5d_8_Set2", 
-               #"128N"	= "Xenograft1_ctrl_5d_1_Set2", 
+               "128N"	= "Xenograft1_ctrl_5d_1_Set2", # this one
                "128C"	= "Xenograft1_ctrl_5d_5_Set2", 
                "129N"	= "Xenograft1_E_5d_1_Set2", 
                "129C"	= "Xenograft1_E_5d_2_Set2", 
@@ -274,7 +285,7 @@ name_l_Set2 = list( "126" = "Xenograft1_ctrl_5d_6_Set2",
 
 name_l_Set3 = list( "126" = "Xenograft14_ctrl_5d_1_Set3", 
                "127N" = "Xenograft14_ctrl_5d_2_Set3", 
-               #"127C" = "Xenograft14_ctrl_5d_3_Set3", 
+               "127C" = "Xenograft14_ctrl_5d_3_Set3", # this one
                "128N"	= "Xenograft14_ctrl_5d_5_Set3", 
                "128C"	= "Xenograft14_ctrl_5d_6_Set3", 
                "129N"	= "Xenograft14_E_24h_1_Set3", 
@@ -292,7 +303,7 @@ name_l_Set3 = list( "126" = "Xenograft14_ctrl_5d_1_Set3",
                "135N"	= "Xenograft14_EBC_24h_4_Set3"
 )
 
-name_l_Set4 = list( #"126" = "Xenograft14_ctrl_5d_3_Set4", 
+name_l_Set4 = list( "126" = "Xenograft14_ctrl_5d_3_Set4", # this one
                "127N" = "Xenograft14_ctrl_5d_4_Set4", 
                "127C" = "Xenograft14_ctrl_5d_5_Set4", 
                "128N"	= "Xenograft14_ctrl_5d_6_Set4", 
@@ -318,7 +329,7 @@ name_l_Set5pY_normXenograft1 = list(
                "129C"	= "Xenograft1_EC_24h_5_Set5", 
                "130N"	= "Xenograft1_EBC_24h_5_Set5", 
                "130C"	= "Xenograft1_EBC_5d_5_Set5", 
-               #"131N"	= "Xenograft1_ctrl_5d_1_Set5", 
+               "131N"	= "Xenograft1_ctrl_5d_1_Set5", # this one
                "131C"	= "Xenograft1_ctrl_5d_5_Set5", 
                "132N"	= "Xenograft1_ctrl_5d_7_Set5", 
                "132C"	= "Xenograft14_E_24h_5_Set5", 
@@ -341,7 +352,7 @@ name_l_Set5pY_normXenograft14 = list(
                "132C"	= "Xenograft14_E_24h_5_Set5", 
                "133N"	= "Xenograft14_EBC_24h_5_Set5", 
                "133C"	= "Xenograft14_EBC_5d_5_Set5", 
-               #"134N"=  "Xenograft14_ctrl_5d_3_Set5", 
+               "134N"=  "Xenograft14_ctrl_5d_3_Set5", # this one
                "134C"	= "Xenograft14_ctrl_5d_5_Set5", 
                "135N"	= "Xenograft14_ctrl_5d_6_Set5"
 )
@@ -351,7 +362,7 @@ name_l_Set5pST_normXenograft1 = list( "126" = "Xenograft1_E_24h_5_Set5",
                "127C" = "Xenograft1_EC_24h_5_Set5", 
                "128N"	= "Xenograft1_EBC_24h_5_Set5", 
                "128C"	= "Xenograft1_EBC_5d_5_Set5", 
-               #"129N"	= "Xenograft1_ctrl_5d_1_Set5", 
+               "129N"	= "Xenograft1_ctrl_5d_1_Set5", # this one
                "129C"	= "Xenograft1_ctrl_5d_5_Set5", 
                "130N"	= "Xenograft1_ctrl_5d_7_Set5", 
                "130C"	= "Xenograft14_E_24h_5_Set5", 
@@ -373,7 +384,7 @@ name_l_Set5pST_normXenograft14 = list( "126" = "Xenograft1_E_24h_5_Set5",
                "130C"	= "Xenograft14_E_24h_5_Set5", 
                "131N"	= "Xenograft14_EBC_24h_5_Set5", 
                "131C"	= "Xenograft14_EBC_5d_5_Set5", 
-               #"132N"	= "Xenograft14_ctrl_5d_3_Set5", 
+               "132N"	= "Xenograft14_ctrl_5d_3_Set5", # this one
                "132C"	= "Xenograft14_ctrl_5d_5_Set5", 
                "133N"	= "Xenograft14_ctrl_5d_6_Set5"
 )

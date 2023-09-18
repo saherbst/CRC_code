@@ -105,8 +105,11 @@ pY_Set1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set1,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "128C") %>%
+                              #norm_channel = "128C") %>%
+                              norm_channel = c("128N", "128C", "130N","133C" ) ) %>%
     filter(grepl("y", `Annotated Sequence` ) )
+
+
 
   
 # Set 2
@@ -115,7 +118,8 @@ pY_Set2 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set2,
                               NA_replace = FALSE, NA_peptide_cutoff = 0, 
                               ion_score_filter = 20,
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "132N") %>%
+                              #norm_channel = "132N") %>%
+                              norm_channel = c("127N", "128N", "130C","132N" ) ) %>%
     filter(grepl("y", `Annotated Sequence` ) )
 ```
 
@@ -194,7 +198,8 @@ pST_Set1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set1,
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "128C") %>%
+                              norm_channel = c("128N", "128C", "130N","133C" ) ) %>%
+                              #norm_channel = "128C") %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 
 # Set 1 One Shot
@@ -204,7 +209,8 @@ pST_Set1_oneshot <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set1_
                               NA_replace = FALSE, NA_peptide_cutoff = 0,
                               ion_score_filter = 20, 
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "128C") %>%
+                              norm_channel = c("128N", "128C", "130N","133C" ) ) %>%
+                              #norm_channel = "128C") %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 
 
@@ -215,7 +221,8 @@ pST_Set2 <- Filter_And_Average_PSMs(file_path_phos = file_path_pST_Set2,
                               NA_replace = FALSE, NA_peptide_cutoff = 0, 
                               ion_score_filter = 20,
                               NA_cutoff_channel = 0.4,
-                              norm_channel = "132N") %>%
+                              #norm_channel = "132N") %>%
+                              norm_channel = c("127N", "128N", "130C","132N" ) ) %>%
     filter(grepl("s|t", `Annotated Sequence` ) )
 ```
 
@@ -294,7 +301,7 @@ name_l_Set1 = list( "126" = "Xenograft_EC_24h_2_Set1",
                "127N" = "Xenograft_EC_24h_5_Set1", 
                "127C" = "Xenograft_E_24h_4_Set1", 
                "128N"	= "Xenograft_ctrl_5d_7_Set1", 
-               #"128C"	 = "Xenograft_ctrl_5d_1_Set1", 
+               "128C"	 = "Xenograft_ctrl_5d_1_Set1", # this one
                "129N"	= "Xenograft_EC_24h_1_Set1", 
                "129C"	= "Xenograft_EBC_24h_3_Set1", 
                "130N"	= "Xenograft_ctrl_5d_3_Set1", 
@@ -321,7 +328,7 @@ name_l_Set2 = list( "126" = "Xenograft_EBC_5d_4_Set2",
                "130C"	= "Xenograft_ctrl_5d_3_Set2", 
                "131N"	= "Xenograft_E_5d_4_Set2", 
                "131C"	= "Xenograft_EC_5d_4_Set2", 
-               #"132N"	= "Xenograft_ctrl_5d_1_Set2", 
+               "132N"	= "Xenograft_ctrl_5d_1_Set2", # this one
                "132C"	= "Xenograft_E_5d_5_Set2", 
                "133N"	= "Xenograft_EC_5d_2_Set2", 
                "133C"	= "Xenograft_EC_5d_1_Set2", 
@@ -337,7 +344,7 @@ prep_l = list(  "Xenograft_EC_24h_2_Set1" = "prep1",
                 "Xenograft_EC_24h_5_Set1" = "prep1",
                 "Xenograft_E_24h_4_Set1" = "prep1",
                 "Xenograft_ctrl_5d_7_Set1" = "prep2",
-                #"Xenograft_ctrl_5d_1_Set1" = "prep1",
+                "Xenograft_ctrl_5d_1_Set1" = "prep1",
                 "Xenograft_EC_24h_1_Set1" = "prep1",
                 "Xenograft_EBC_24h_3_Set1" = "prep1",
                 "Xenograft_ctrl_5d_3_Set1" = "prep1",
@@ -362,7 +369,7 @@ prep_l = list(  "Xenograft_EC_24h_2_Set1" = "prep1",
                 "Xenograft_ctrl_5d_3_Set2"  = "prep1", 
                 "Xenograft_E_5d_4_Set2" = "prep2", 
                 "Xenograft_EC_5d_4_Set2"  = "prep2", 
-                #"Xenograft_ctrl_5d_1_Set2"  = "prep1", 
+                "Xenograft_ctrl_5d_1_Set2"  = "prep1", 
                 "Xenograft_E_5d_5_Set2" = "prep2", 
                 "Xenograft_EC_5d_2_Set2"  = "prep2", 
                 "Xenograft_EC_5d_1_Set2"  = "prep2", 
@@ -378,7 +385,7 @@ seppack_l = list( "Xenograft_EC_24h_2_Set1" = "seppack?",
                 "Xenograft_EC_24h_5_Set1" = "seppack?",
                 "Xenograft_E_24h_4_Set1"  = "seppack?",
                 "Xenograft_ctrl_5d_7_Set1"  = "seppack?",
-                #"Xenograft_ctrl_5d_1_Set1" = "seppack?,
+                "Xenograft_ctrl_5d_1_Set1" = "seppack?",
                 "Xenograft_EC_24h_1_Set1" = "seppack?",
                 "Xenograft_EBC_24h_3_Set1"  = "seppack?",
                 "Xenograft_ctrl_5d_3_Set1"  = "seppack?",
@@ -403,7 +410,7 @@ seppack_l = list( "Xenograft_EC_24h_2_Set1" = "seppack?",
                 "Xenograft_ctrl_5d_3_Set2"    = "seppack?",
                 "Xenograft_E_5d_4_Set2"   = "seppack?",
                 "Xenograft_EC_5d_4_Set2"    = "seppack?",
-                #"Xenograft_ctrl_5d_1_Set2"   = "seppack?,
+                "Xenograft_ctrl_5d_1_Set2"   = "seppack?",
                 "Xenograft_E_5d_5_Set2"   = "seppack?",
                 "Xenograft_EC_5d_2_Set2"    = "seppack?",
                 "Xenograft_EC_5d_1_Set2"    = "seppack?",
@@ -637,15 +644,19 @@ pST_withNA_norm
 ##### pY
 ```{r}
 channels_Set1 <- unlist(name_l_Set1[gsub("Abundance ", "", colnames(pY_withNA %>% select(contains("Abundance") & contains("x")))) %>% gsub(".x", "", .)])
-names(channels_Set1) <- colnames(pY_withNA %>% select(contains("Abundance") & contains("x") & !contains("128C") ))
+names(channels_Set1) <- colnames(pY_withNA %>% select(contains("Abundance") & contains("x") #& !contains("128C") 
+                                                      ))
 
 channels_Set2 <- unlist(name_l_Set2[gsub("Abundance ", "", colnames(pY_withNA %>% select(contains("Abundance") & contains("y")))) %>% gsub(".y", "", .)])
-names(channels_Set2) <- colnames(pY_withNA %>% select(contains("Abundance") & contains("y") & !contains("132N") ))
+names(channels_Set2) <- colnames(pY_withNA %>% select(contains("Abundance") & contains("y") #& !contains("132N") 
+                                                      ))
 
-colnames(pY_withNA)[c(5:8, 10:22)] <- channels_Set1[colnames(pY_withNA)[c(5:8, 10:22)]]
-colnames(pY_withNA)[c(24:34,36:41)] <- channels_Set2[colnames(pY_withNA)[c(24:34,36:41)]]
-colnames(pY_withNA)[9] <- "Xenograft_ctrl_5d_1_Set1"
-colnames(pY_withNA)[35] <- "Xenograft_ctrl_5d_1_Set2"
+#colnames(pY_withNA)[c(5:8, 10:22)] <- channels_Set1[colnames(pY_withNA)[c(5:8, 10:22)]]
+colnames(pY_withNA)[c(5:22)] <- channels_Set1[colnames(pY_withNA)[c(5:22)]]
+#colnames(pY_withNA)[c(24:34,36:41)] <- channels_Set2[colnames(pY_withNA)[c(24:34,36:41)]]
+colnames(pY_withNA)[c(24:41)] <- channels_Set2[colnames(pY_withNA)[c(24:41)]]
+#colnames(pY_withNA)[9] <- "Xenograft_ctrl_5d_1_Set1"
+#colnames(pY_withNA)[35] <- "Xenograft_ctrl_5d_1_Set2"
 
 
 pY_withNA$notmissingcomletely_Set1  <- (pY_withNA %>%
@@ -677,15 +688,19 @@ pY_NAs
 ##### pST
 ```{r}
 channels_Set1 <- unlist(name_l_Set1[gsub("Abundance ", "", colnames(pST_withNA %>% select(contains("Abundance") & contains("x")))) %>% gsub(".x", "", .)])
-names(channels_Set1) <- colnames(pST_withNA %>% select(contains("Abundance") & contains("x") & !contains("128C") ))
+names(channels_Set1) <- colnames(pST_withNA %>% select(contains("Abundance") & contains("x") #& !contains("128C") 
+                                                       ))
 
 channels_Set2 <- unlist(name_l_Set2[gsub("Abundance ", "", colnames(pST_withNA %>% select(contains("Abundance") & contains("y")))) %>% gsub(".y", "", .)])
-names(channels_Set2) <- colnames(pST_withNA %>% select(contains("Abundance") & contains("y") & !contains("132N") ))
+names(channels_Set2) <- colnames(pST_withNA %>% select(contains("Abundance") & contains("y")# & !contains("132N") 
+                                                       ))
 
-colnames(pST_withNA)[c(5:8, 10:22)] <- channels_Set1[colnames(pST_withNA)[c(5:8, 10:22)]]
-colnames(pST_withNA)[c(24:34,36:41)] <- channels_Set2[colnames(pST_withNA)[c(24:34,36:41)]]
-colnames(pST_withNA)[9] <- "Xenograft_ctrl_5d_1_Set1"
-colnames(pST_withNA)[35] <- "Xenograft_ctrl_5d_1_Set2"
+#colnames(pST_withNA)[c(5:8, 10:22)] <- channels_Set1[colnames(pST_withNA)[c(5:8, 10:22)]]
+colnames(pST_withNA)[c(5:22)] <- channels_Set1[colnames(pST_withNA)[c(5:22)]]
+#colnames(pST_withNA)[c(24:34,36:41)] <- channels_Set2[colnames(pST_withNA)[c(24:34,36:41)]]
+colnames(pST_withNA)[c(24:41)] <- channels_Set2[colnames(pST_withNA)[c(24:41)]]
+#colnames(pST_withNA)[9] <- "Xenograft_ctrl_5d_1_Set1"
+#colnames(pST_withNA)[35] <- "Xenograft_ctrl_5d_1_Set2"
 
 
 pST_withNA$notmissingcomletely_Set1  <- (pST_withNA %>%

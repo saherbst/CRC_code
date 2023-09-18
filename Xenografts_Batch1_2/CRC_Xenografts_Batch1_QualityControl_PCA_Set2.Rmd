@@ -1,5 +1,5 @@
 ---
-title: "Quality control PCA- CRC Batch 1"
+title: "Quality control PCA- CRC Batch 1 Set 2"
 author: Sophie Herbst
 output:
   html_document:
