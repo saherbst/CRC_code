@@ -87,7 +87,7 @@ file_path_pST_Set4 <- "../Data/Mass_Spec/SH_20230801_CRC_Xenografts_Batch2_Set4_
 file_path_pST_Set5 <- "../Data/Mass_Spec/SH_20230726_CRC_Xenografts_Batch2_Set5_TMTPro_AC221_AA_pST_PSMs.txt"
 
 file_path_pY_Set1 <- "../Data/Mass_Spec/SH_20230712_CRC_Xenografts_Batch2_Set1_TMTPro_AC103_AA_pY_PSMs.txt"
-#file_path_pY_Set2 <- "../Data/Mass_Spec/SH_20230"
+file_path_pY_Set2 <- "../Data/Mass_Spec/SH_20231010_CRC_Xenografts_Batch2_Set2rep3_TMTPro_RA3umAC01_AA_pY_PSMs.txt"
 file_path_pY_Set3 <- "../Data/Mass_Spec/SH_20230720_CRC_Xenografts_Batch2_Set3_TMTPro_AC119_AA_pY_fixedvaluePSMValidator_PSMs.txt"
 file_path_pY_Set4 <- "../Data/Mass_Spec/SH_20230725_CRC_Xenografts_Batch2_Set4_TMTPro_AC221_AA_pY_PSMs.txt"
 file_path_pY_Set5 <- "../Data/Mass_Spec/SH_20230801_CRC_Xenografts_Batch2_Set5rep_TMTPro_AC112_AA_pY_PSMs.txt"
@@ -98,7 +98,7 @@ file_path_sup_Set3 <- "../Data/Mass_Spec/SH_20230720_CRC_Xenografts_Batch2_Set3_
 file_path_sup_Set4 <- "../Data/Mass_Spec/SH_20230726_CRC_Xenografts_Batch2_Set4_TMTpro_usedpre+AC222_HR1_sup_PSMs.txt"
 file_path_sup_Set5pST <- "../Data/Mass_Spec/SH_20230726_CRC_Xenografts_Batch2_Set5_TMTpro_usedpre+AC222_HR1_sup_PSMs.txt"
 file_path_sup_Set5pY <- "../Data/Mass_Spec/SH_20230801_CRC_Xenografts_Batch2_Set5rep_TMTpro_usedpre+AC75_HR1_sup_PSMs.txt"
-
+file_path_sup_Set2pY <- "../Data/Mass_Spec/SH_20231010_CRC_Xenografts_Batch2_Set2rep3_TMTpro_newpre+AC136_HR1_sup_PSMs.txt"
 ```
 
 
@@ -116,6 +116,17 @@ pY_Set1 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set1,
                               NA_cutoff_channel = 0.4,
                               norm_channel = c( "126", "127N", "127C", "128N", "128C", "129N") )  %>%
                               #norm_channel = "126") %>%
+    filter(grepl("y", `Annotated Sequence` ) )
+
+# Set 2
+pY_Set2 <- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set2,  
+                              file_path_sup = file_path_sup_Set2pY,
+                              return_data = "phos", 
+                              NA_replace = FALSE, NA_peptide_cutoff = 0,
+                              ion_score_filter = 20, 
+                              NA_cutoff_channel = 0.4,
+                              norm_channel = c( "126", "127N", "127C", "128N", "128C") )  %>%
+                              #norm_channel = "128N") %>%
     filter(grepl("y", `Annotated Sequence` ) )
 
 # Set 3
@@ -416,26 +427,26 @@ pY_Set1_form <- pY_Set1_form %>%
   mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set1 } ) 
 pY_Set1_form 
 
-#pY_Set2_form <- pY_Set2 %>%
-#  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), #Master.Protein.Accessions = `Master Protein Accessions`,
-#                             Master.Protein.Descriptions = `Master Protein #Descriptions`)
-#newnames_pY_Set2 <- c(name_l_Set2, paste0("log2FC_", name_l_Set2 ), #name_l_Set2 )
-#names(newnames_pY_Set2) <- c( paste0("TMTNorm_Abundance ", #names(name_l_Set2)), 
-#                          paste0("log2FC_", names(name_l_Set2)),
-#                          paste0("Centered_Abundance ", #names(name_l_Set2)))
-#stopifnot(colnames(pY_Set2_form %>% 
-#                         select(contains("TMTNorm_Abundance" ) | #contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  #names(newnames_pY_Set2)) 
-#newnames_pY_Set2["HGNC_Symbol"] <- "HGNC_Symbol"
-#newnames_pY_Set2["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
-#newnames_pY_Set2["Master.Protein.Descriptions"] <- #"Master.Protein.Descriptions"
-#newnames_pY_Set2["Annotated Sequence"] <- "Annotated_Sequence"
-#colnames(pY_Set2_form) <- newnames_pY_Set2[colnames(pY_Set2_form)]
-#mean_normal_pY_Set2 <- pY_Set2_form %>% select(contains("_ctrl" )) %>%
-#  #2^. %>% 
-#  rowMeans()
-#pY_Set2_form <- pY_Set2_form %>%
-#  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set2 #} ) 
-#pY_Set2_form
+pY_Set2_form <- pY_Set2 %>%
+  select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
+                             Master.Protein.Descriptions = `Master Protein Descriptions`)
+newnames_pY_Set2 <- c(name_l_Set2, paste0("log2FC_", name_l_Set2 ), name_l_Set2 )
+names(newnames_pY_Set2) <- c( paste0("TMTNorm_Abundance ", names(name_l_Set2)), 
+                          paste0("log2FC_", names(name_l_Set2)),
+                          paste0("Centered_Abundance ", names(name_l_Set2)))
+stopifnot(colnames(pY_Set2_form %>% 
+                         select(contains("TMTNorm_Abundance" ) | contains("log2FC" ) | contains("Centered_Abundance ") ) ) %in%  names(newnames_pY_Set2)) 
+newnames_pY_Set2["HGNC_Symbol"] <- "HGNC_Symbol"
+newnames_pY_Set2["Master.Protein.Accessions"] <- "Master.Protein.Accessions"
+newnames_pY_Set2["Master.Protein.Descriptions"] <- "Master.Protein.Descriptions"
+newnames_pY_Set2["Annotated Sequence"] <- "Annotated_Sequence"
+colnames(pY_Set2_form) <- newnames_pY_Set2[colnames(pY_Set2_form)]
+mean_normal_pY_Set2 <- pY_Set2_form %>% select(contains("_ctrl" )) %>%
+  #2^. %>% 
+  rowMeans()
+pY_Set2_form <- pY_Set2_form %>%
+  mutate_at( vars(contains("log2") ), function(f){ f - mean_normal_pY_Set2 } ) 
+pY_Set2_form 
 
 pY_Set3_form <- pY_Set3 %>%
   select(`Annotated Sequence`, HGNC_Symbol, contains("log2FC"), Master.Protein.Accessions = `Master Protein Accessions`,
@@ -660,10 +671,15 @@ pST_Set5_normXenograft14_form
 ##### Xenografts # 1
 ```{r}
 # Combine fold changes over bridge for the pY sets
-pY_Xenograft1 <- left_join( 
-  Minimize_df(pY_Set1, name_l = name_l_Set1, FC = TRUE),
+pY_Xenograft1 <- 
+    left_join(
+  left_join( 
+    Minimize_df(pY_Set1, name_l = name_l_Set1, FC = TRUE),
+    Minimize_df(pY_Set2, name_l = name_l_Set2, FC = TRUE),
+    by = c("HGNC_Symbol", "Annotated_Sequence" ) ),
   Minimize_df(pY_Set5_normXenograft1, name_l = name_l_Set5pY_normXenograft1, FC = TRUE),
   by = c("HGNC_Symbol", "Annotated_Sequence" ) )
+
 
 pY_Xenograft1 <- left_join(pY_Xenograft1,
           pY_Set1 %>% 
@@ -799,7 +815,7 @@ pST_Xenograft14_noNA
 
 all_pY_sites <- bind_rows(
   pY_Set1_form %>% select(HGNC_Symbol, Annotated_Sequence),
-  #pY_Set2_form %>% select(HGNC_Symbol, Annotated_Sequence),
+  pY_Set2_form %>% select(HGNC_Symbol, Annotated_Sequence),
   pY_Set3_form %>% select(HGNC_Symbol, Annotated_Sequence),
   pY_Set4_form %>% select(HGNC_Symbol, Annotated_Sequence),
   pY_Set5_normXenograft1_form %>% select(HGNC_Symbol, Annotated_Sequence)) %>% unique
@@ -1058,14 +1074,14 @@ pY_mat_Set1 <- pY_Set1_form %>%
 colnames(pY_mat_Set1) <- paste0( pY_Set1_form$HGNC_Symbol, "_", pY_Set1_form$Annotated_Sequence )
 pY_mat_Set1[1:5, 1:5]
 
-#### Set 2
-#pY_mat_Set2 <- pY_Set2_form %>% 
-#  select(-HGNC_Symbol, -Annotated_Sequence,           
-#         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
-#  as.matrix() %>% 
-#  t()
-#colnames(pY_mat_Set2) <- paste0( pY_Set2_form$HGNC_Symbol, "_", #pY_Set2_form$Annotated_Sequence )
-#pY_mat_Set2[1:5, 1:5]
+### Set 2
+pY_mat_Set2 <- pY_Set2_form %>% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix() %>% 
+  t()
+colnames(pY_mat_Set2) <- paste0( pY_Set2_form$HGNC_Symbol, "_", pY_Set2_form$Annotated_Sequence )
+pY_mat_Set2[1:5, 1:5]
 
 ### Set 3
 pY_mat_Set3 <- pY_Set3_form %>% 
@@ -1322,6 +1338,54 @@ pY_se_Set1 <- SummarizedExperiment(assays = assay_data_pY_Set1,
 validObject(pY_se_Set1)
 pY_se_Set1
 ```
+
+###### Set 2
+```{r}
+# Assay data
+assay_data_pY_Set2 <- 
+  pY_Set2_form %>% 
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln") %>%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %>%
+  as.matrix()
+
+#colnames(assay_data_pY_Set2) <- gsub("log2FC_Xenograft_", "", colnames(assay_data_pY_Set2) )
+
+# RowData
+rowData_pY_Set2 <- 
+  pY_Set2_form %>%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %>%
+  mutate(coln = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  mutate(ID = paste0(HGNC_Symbol, "_", Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, "_", Annotated_Sequence)) %>%
+  as.data.frame() %>% 
+  column_to_rownames("coln")
+
+
+# ColData
+colData_pY_Set2 <- 
+  str_split( 
+    #gsub("log2FC_Xenograft_", "", 
+         colnames(assay_data_pY_Set2 #) 
+                  ), pattern = "_", simplify = TRUE ) %>%
+  as.data.frame()
+rownames(colData_pY_Set2) <- #gsub("log2FC_Xenograft_", "", 
+                                  colnames(assay_data_pY_Set2) #)
+colnames(colData_pY_Set2) <- c( "log2FC", "Xenograft", "condition", "day", "replicate", "set" )
+colData_pY_Set2$label <- #gsub("log2FC_Xenograft_", "", 
+                              colnames(assay_data_pY_Set2) #)
+colData_pY_Set2$ID <- #gsub("log2FC_Xenograft_", "", 
+                           colnames(assay_data_pY_Set2) #)
+
+pY_se_Set2 <- SummarizedExperiment(assays = assay_data_pY_Set2,
+                           colData = colData_pY_Set2,
+                           rowData = rowData_pY_Set2)
+validObject(pY_se_Set2)
+pY_se_Set2
+```
+
 
 ###### Set 3
 ```{r}
@@ -1911,8 +1975,8 @@ pY_Xenograft14_mat_normtomedian[1:5,]
 pY_mat_Set1_normtomedian <- t(log2(t(2^pY_mat_Set1)/colMedians(2^pY_mat_Set1) ))
 pY_mat_Set1_normtomedian[1:5,1:5]
 
-#pY_mat_Set2_normtomedian <- t(log2(t(2^pY_mat_Set2)/colMedians(2^pY_mat_Set2) ))
-#pY_mat_Set2_normtomedian[1:5,1:5]
+pY_mat_Set2_normtomedian <- t(log2(t(2^pY_mat_Set2)/colMedians(2^pY_mat_Set2) ))
+pY_mat_Set2_normtomedian[1:5,1:5]
 
 pY_mat_Set3_normtomedian <- t(log2(t(2^pY_mat_Set3)/colMedians(2^pY_mat_Set3) ))
 pY_mat_Set3_normtomedian[1:5,1:5]

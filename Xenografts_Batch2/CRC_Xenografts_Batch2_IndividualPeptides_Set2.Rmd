@@ -40,7 +40,7 @@ source("CRC_Xenografts_Batch2_Functions.R")
 
 ## Individual peptides
 ### Cherry picked for xenograft 4
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 plot_barplot_phos( dat= pY_Set2_form, prot = "RET", add_title = "pY" )
 plot_boxplot_phos( dat= pY_Set2_form, prot = "RET", add_title = "pY" , specific_peptide = "RRDyLDLAASTPSDSLIYDDGLSEEETPLVDCNNAPLPR")
 plot_barplot_phos( dat= pY_Set2_form, prot = "BCAR1", add_title = "pY" )
@@ -55,9 +55,11 @@ plot_barplot_phos( dat= pY_Set2_form, prot = "MAPK1", add_title = "pY" )
 plot_boxplot_phos( dat= pY_Set2_form, prot = "MAPK1", add_title = "pY" , specific_peptide = "VADPDHDHTGFLtEyVATR")
 plot_barplot_phos( dat= pY_Set2_form, prot = "DDR1", add_title = "pY" )
 plot_barplot_phos( dat= pY_Set2_form, prot = "EGFR", add_title = "pY" )
+plot_boxplot_phos( dat= pY_Set2_form, prot = "EGFR", add_title = "pY" )
 #plot_boxplot_phos( dat= pY_Set2_form, prot = "DDR1", add_title = "pY" , specific_peptide = "")
 
 plot_barplot_phos( dat= pY_Set2_form, prot = "SRC", add_title = "pY" )
+plot_boxplot_phos( dat= pY_Set2_form, prot = "SRC", add_title = "pY" )
 plot_barplot_phos( dat= pY_Set2_form, prot = "ERBB2", add_title = "pY" )
 plot_barplot_phos( dat= pY_Set2_form, prot = "SYK", add_title = "pY" )
 
@@ -66,7 +68,7 @@ plot_barplot_phos( dat= pY_Set2_form, prot = "CD163", add_title = "pY Monocyte/m
 
 ## BRAF
 ```{r}
-#plot_barplot_phos( dat= pY_Set2_form, prot = "BRAF", add_title = "pY" )
+plot_barplot_phos( dat= pY_Set2_form, prot = "BRAF", add_title = "pY" )
 plot_barplot_phos( dat= pST_Set2_form, prot = "BRAF", add_title = "pST" )
 plot_boxplot_phos( dat= pST_Set2_form, prot = "BRAF", add_title = "pST" )
 

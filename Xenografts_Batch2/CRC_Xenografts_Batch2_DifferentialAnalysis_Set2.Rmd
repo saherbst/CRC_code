@@ -38,6 +38,79 @@ source("CRC_Xenografts_Batch2_Functions.R")
 
 # Analysis
 ## DEP
+### Tyrosine all
+#### Each condition vs ctrl
+```{r, eval=TRUE}
+data_diff_ctrl_vs_E_pY <- test_diff(pY_se_Set2, type="manual", test = "E_vs_ctrl")
+dep_ctrl_vs_E_pY <- add_rejections_SH(data_diff_ctrl_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_ctrl_vs_E_pY, contrast = "E_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pY") 
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_Set2_form, dep_ctrl_vs_E_pY, comparison = "E_vs_ctrl_diff")
+```
+
+```{r}
+data_diff_EC_vs_ctrl_pY <- test_diff(pY_se_Set2, type="manual", test = "EC_vs_ctrl")
+dep_EC_vs_ctrl_pY <- add_rejections_SH(data_diff_EC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EC_vs_ctrl_pY, contrast = "EC_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pY") 
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_Set2_form, dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_EBC_vs_ctrl_pY <- test_diff(pY_se_Set2, type="manual", test = "EBC_vs_ctrl")
+dep_EBC_vs_ctrl_pY <- add_rejections_SH(data_diff_EBC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EBC_vs_ctrl_pY, contrast = "EBC_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_Set2_form, dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff")
+```
+
+
+#### EC vs E
+```{r}
+data_diff_EC_vs_E_pY <- test_diff(pY_se_Set2, type = "manual", 
+                              test = c("EC_vs_E"))
+dep_EC_vs_E_pY <- add_rejections_SH(data_diff_EC_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EC_vs_E_pY, contrast = "EC_vs_E",  add_names = TRUE, additional_title = "pY", proteins_of_interest = "EGFR")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_Set2_form, dep_EC_vs_E_pY, comparison = "EC_vs_E_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### EBC vs EC
+```{r}
+data_diff_EBC_vs_EC_pY <- test_diff(pY_se_Set2, type = "manual", 
+                              test = c("EBC_vs_EC"))
+dep_EBC_vs_EC_pY <- add_rejections_SH(data_diff_EBC_vs_EC_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EBC_vs_EC_pY, contrast = "EBC_vs_EC",  add_names = TRUE, additional_title = "pY")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pY_Set2_form, dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+
 ### Serine/Threonine all
 #### Each condition vs ctrl
 ```{r, eval=TRUE}

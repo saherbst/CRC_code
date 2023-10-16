@@ -37,7 +37,7 @@ source("CRC_Xenografts_Batch2_Functions.R")
 # Analysis
 ## Heatmaps median centered log2 fold change
 ### Phospho-Tyrosines 
-```{r, fig.height=8, fig.width=10, eval=FALSE}
+```{r, fig.height=8, fig.width=10, eval=TRUE}
 sample_annotation_df <- tibble( sample = rownames(
   pY_mat_Set2_normtomedian
   ) ) %>% 

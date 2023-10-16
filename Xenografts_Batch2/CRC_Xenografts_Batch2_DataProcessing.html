@@ -1572,7 +1572,7 @@ border-radius: 0px;
 </div>
 
 
-<p>Analysis date: 2023-09-18</p>
+<p>Analysis date: 2023-10-16</p>
 <p>CRC Xenografts # 1 and #14</p>
 <div id="todo" class="section level1">
 <h1>TODO</h1>
@@ -1708,7 +1708,7 @@ file_path_pST_Set4 &lt;- &quot;../Data/Mass_Spec/SH_20230801_CRC_Xenografts_Batc
 file_path_pST_Set5 &lt;- &quot;../Data/Mass_Spec/SH_20230726_CRC_Xenografts_Batch2_Set5_TMTPro_AC221_AA_pST_PSMs.txt&quot;
 
 file_path_pY_Set1 &lt;- &quot;../Data/Mass_Spec/SH_20230712_CRC_Xenografts_Batch2_Set1_TMTPro_AC103_AA_pY_PSMs.txt&quot;
-#file_path_pY_Set2 &lt;- &quot;../Data/Mass_Spec/SH_20230&quot;
+file_path_pY_Set2 &lt;- &quot;../Data/Mass_Spec/SH_20231010_CRC_Xenografts_Batch2_Set2rep3_TMTPro_RA3umAC01_AA_pY_PSMs.txt&quot;
 file_path_pY_Set3 &lt;- &quot;../Data/Mass_Spec/SH_20230720_CRC_Xenografts_Batch2_Set3_TMTPro_AC119_AA_pY_fixedvaluePSMValidator_PSMs.txt&quot;
 file_path_pY_Set4 &lt;- &quot;../Data/Mass_Spec/SH_20230725_CRC_Xenografts_Batch2_Set4_TMTPro_AC221_AA_pY_PSMs.txt&quot;
 file_path_pY_Set5 &lt;- &quot;../Data/Mass_Spec/SH_20230801_CRC_Xenografts_Batch2_Set5rep_TMTPro_AC112_AA_pY_PSMs.txt&quot;
@@ -1718,7 +1718,8 @@ file_path_sup_Set2 &lt;- &quot;../Data/Mass_Spec/SH_20230713_CRC_Xenografts_Batc
 file_path_sup_Set3 &lt;- &quot;../Data/Mass_Spec/SH_20230720_CRC_Xenografts_Batch2_Set3_TMTpro_newpre+AC118_HR1_sup-(1)_PSMs.txt&quot;
 file_path_sup_Set4 &lt;- &quot;../Data/Mass_Spec/SH_20230726_CRC_Xenografts_Batch2_Set4_TMTpro_usedpre+AC222_HR1_sup_PSMs.txt&quot;
 file_path_sup_Set5pST &lt;- &quot;../Data/Mass_Spec/SH_20230726_CRC_Xenografts_Batch2_Set5_TMTpro_usedpre+AC222_HR1_sup_PSMs.txt&quot;
-file_path_sup_Set5pY &lt;- &quot;../Data/Mass_Spec/SH_20230801_CRC_Xenografts_Batch2_Set5rep_TMTpro_usedpre+AC75_HR1_sup_PSMs.txt&quot;</code></pre>
+file_path_sup_Set5pY &lt;- &quot;../Data/Mass_Spec/SH_20230801_CRC_Xenografts_Batch2_Set5rep_TMTpro_usedpre+AC75_HR1_sup_PSMs.txt&quot;
+file_path_sup_Set2pY &lt;- &quot;../Data/Mass_Spec/SH_20231010_CRC_Xenografts_Batch2_Set2rep3_TMTpro_newpre+AC136_HR1_sup_PSMs.txt&quot;</code></pre>
 </div>
 </div>
 <div id="process-data" class="section level2">
@@ -1805,6 +1806,83 @@ pY_Set1 &lt;- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set1,
 ##      0.8511617      0.9185601      1.1541665      1.0038945      0.8159599 
 ## Abundance 134N Abundance 134C Abundance 135N 
 ##      0.8227835      0.6038158      1.1165146</code></pre>
+<pre><code>## Multiple controls provided</code></pre>
+<pre class="r"><code># Set 2
+pY_Set2 &lt;- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set2,  
+                              file_path_sup = file_path_sup_Set2pY,
+                              return_data = &quot;phos&quot;, 
+                              NA_replace = FALSE, NA_peptide_cutoff = 0,
+                              ion_score_filter = 20, 
+                              NA_cutoff_channel = 0.4,
+                              norm_channel = c( &quot;126&quot;, &quot;127N&quot;, &quot;127C&quot;, &quot;128N&quot;, &quot;128C&quot;) )  %&gt;%
+                              #norm_channel = &quot;128N&quot;) %&gt;%
+    filter(grepl(&quot;y&quot;, `Annotated Sequence` ) )</code></pre>
+<pre><code>## Filtering the data with the following settings:
+##                   Ion Score Filter: 20 
+##                   Ion Score Filter for sup: 20 
+##                   Perculator qvalue: 0.01 
+##                   Perculator qvalue for sup: FALSE 
+##                   Isolation Interference Filter: FALSE 
+##                   ptmRS Probability Score Filter: 75 
+##                   Removing channels if they have more than 40 % missing values
+##                   Replacing NAs: FALSE 
+##                   Removing peptides with more than 0  missing values
+## 
+## Loading phospho-data:
+## Rows: 8640 Columns: 81── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;\t&quot;
+## chr (21): Confidence, Identifying Node Type, Identifying Node, Search ID, PS...
+## dbl (56): Identifying Node No, Number of Proteins, Number of Missed Cleavage...
+## lgl  (4): Checked, Tags, Quan Info, Amino Acid Search
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## Percentages of missing values per channel:</code></pre>
+<pre><code>##  Abundance 126 Abundance 127N Abundance 127C Abundance 128N Abundance 128C 
+##     0.12018634     0.09968944     0.07577640     0.05434783     0.08975155 
+## Abundance 129N Abundance 129C Abundance 130N Abundance 130C Abundance 131N 
+##     0.04751553     0.05403727     0.05093168     0.06552795     0.05155280 
+## Abundance 131C Abundance 132N Abundance 132C Abundance 133N Abundance 133C 
+##     0.05341615     0.08229814     0.07950311     0.13416149     0.09782609 
+## Abundance 134N Abundance 134C Abundance 135N 
+##     0.07701863     0.08602484     0.11055901</code></pre>
+<pre><code>## Missed cleavages:</code></pre>
+<pre><code>## 0  % of the filtered peptides had more than 2 missed cleavages
+##  0.011  % of peptides had 2 missed cleavages
+##  0.132  % of peptides had 1 missed cleavage
+##  0.857  % of peptides had no missed cleavages</code></pre>
+<pre><code>## 
+## Loading sup-data:
+## Rows: 4054 Columns: 75── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;\t&quot;
+## chr (17): Confidence, Identifying Node Type, Identifying Node, Search ID, PS...
+## dbl (54): Identifying Node No, Number of Proteins, Number of Missed Cleavage...
+## lgl  (4): Checked, Tags, Quan Info, Amino Acid Search
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## Percentages of missing values per channel:</code></pre>
+<pre><code>##  Abundance 126 Abundance 127N Abundance 127C Abundance 128N Abundance 128C 
+##    0.006259027    0.005777564    0.004333173    0.001925855    0.004814636 
+## Abundance 129N Abundance 129C Abundance 130N Abundance 130C Abundance 131N 
+##    0.004333173    0.004333173    0.005296100    0.006259027    0.004814636 
+## Abundance 131C Abundance 132N Abundance 132C Abundance 133N Abundance 133C 
+##    0.003851709    0.004814636    0.004814636    0.005296100    0.003370246 
+## Abundance 134N Abundance 134C Abundance 135N 
+##    0.003370246    0.003370246    0.003370246 
+## [1] &quot;The sup run identified 627 proteins&quot;</code></pre>
+<pre><code>## Missed cleavages:</code></pre>
+<pre><code>## 0  % of the filtered peptides had more than 2 missed cleavages
+##  0  % of peptides had 2 missed cleavages
+##  0.049  % of peptides had 1 missed cleavage
+##  0.951  % of peptides had no missed cleavages</code></pre>
+<pre><code>## Correction factors:</code></pre>
+<pre><code>##  Abundance 126 Abundance 127N Abundance 127C Abundance 128N Abundance 128C 
+##      0.9694617      1.0529602      0.9280731      1.3565857      1.0822919 
+## Abundance 129N Abundance 129C Abundance 130N Abundance 130C Abundance 131N 
+##      1.3071780      1.0919563      0.9365339      0.9193529      0.9846019 
+## Abundance 131C Abundance 132N Abundance 132C Abundance 133N Abundance 133C 
+##      0.9558215      0.9391827      0.9355997      0.7568401      1.0118237 
+## Abundance 134N Abundance 134C Abundance 135N 
+##      1.0256388      0.8549833      0.8911145</code></pre>
 <pre><code>## Multiple controls provided</code></pre>
 <pre class="r"><code># Set 3
 pY_Set3 &lt;- Filter_And_Average_PSMs(file_path_phos = file_path_pY_Set3,  
@@ -2777,28 +2855,47 @@ pY_Set1_form </code></pre>
 ## #   log2FC_Xenograft1_ctrl_5d_4_Set1 &lt;dbl&gt;,
 ## #   log2FC_Xenograft1_ctrl_5d_5_Set1 &lt;dbl&gt;,
 ## #   log2FC_Xenograft1_ctrl_5d_7_Set1 &lt;dbl&gt;, …</code></pre>
-<pre class="r"><code>#pY_Set2_form &lt;- pY_Set2 %&gt;%
-#  select(`Annotated Sequence`, HGNC_Symbol, contains(&quot;log2FC&quot;), #Master.Protein.Accessions = `Master Protein Accessions`,
-#                             Master.Protein.Descriptions = `Master Protein #Descriptions`)
-#newnames_pY_Set2 &lt;- c(name_l_Set2, paste0(&quot;log2FC_&quot;, name_l_Set2 ), #name_l_Set2 )
-#names(newnames_pY_Set2) &lt;- c( paste0(&quot;TMTNorm_Abundance &quot;, #names(name_l_Set2)), 
-#                          paste0(&quot;log2FC_&quot;, names(name_l_Set2)),
-#                          paste0(&quot;Centered_Abundance &quot;, #names(name_l_Set2)))
-#stopifnot(colnames(pY_Set2_form %&gt;% 
-#                         select(contains(&quot;TMTNorm_Abundance&quot; ) | #contains(&quot;log2FC&quot; ) | contains(&quot;Centered_Abundance &quot;) ) ) %in%  #names(newnames_pY_Set2)) 
-#newnames_pY_Set2[&quot;HGNC_Symbol&quot;] &lt;- &quot;HGNC_Symbol&quot;
-#newnames_pY_Set2[&quot;Master.Protein.Accessions&quot;] &lt;- &quot;Master.Protein.Accessions&quot;
-#newnames_pY_Set2[&quot;Master.Protein.Descriptions&quot;] &lt;- #&quot;Master.Protein.Descriptions&quot;
-#newnames_pY_Set2[&quot;Annotated Sequence&quot;] &lt;- &quot;Annotated_Sequence&quot;
-#colnames(pY_Set2_form) &lt;- newnames_pY_Set2[colnames(pY_Set2_form)]
-#mean_normal_pY_Set2 &lt;- pY_Set2_form %&gt;% select(contains(&quot;_ctrl&quot; )) %&gt;%
-#  #2^. %&gt;% 
-#  rowMeans()
-#pY_Set2_form &lt;- pY_Set2_form %&gt;%
-#  mutate_at( vars(contains(&quot;log2&quot;) ), function(f){ f - mean_normal_pY_Set2 #} ) 
-#pY_Set2_form
-
-pY_Set3_form &lt;- pY_Set3 %&gt;%
+<pre class="r"><code>pY_Set2_form &lt;- pY_Set2 %&gt;%
+  select(`Annotated Sequence`, HGNC_Symbol, contains(&quot;log2FC&quot;), Master.Protein.Accessions = `Master Protein Accessions`,
+                             Master.Protein.Descriptions = `Master Protein Descriptions`)
+newnames_pY_Set2 &lt;- c(name_l_Set2, paste0(&quot;log2FC_&quot;, name_l_Set2 ), name_l_Set2 )
+names(newnames_pY_Set2) &lt;- c( paste0(&quot;TMTNorm_Abundance &quot;, names(name_l_Set2)), 
+                          paste0(&quot;log2FC_&quot;, names(name_l_Set2)),
+                          paste0(&quot;Centered_Abundance &quot;, names(name_l_Set2)))
+stopifnot(colnames(pY_Set2_form %&gt;% 
+                         select(contains(&quot;TMTNorm_Abundance&quot; ) | contains(&quot;log2FC&quot; ) | contains(&quot;Centered_Abundance &quot;) ) ) %in%  names(newnames_pY_Set2)) 
+newnames_pY_Set2[&quot;HGNC_Symbol&quot;] &lt;- &quot;HGNC_Symbol&quot;
+newnames_pY_Set2[&quot;Master.Protein.Accessions&quot;] &lt;- &quot;Master.Protein.Accessions&quot;
+newnames_pY_Set2[&quot;Master.Protein.Descriptions&quot;] &lt;- &quot;Master.Protein.Descriptions&quot;
+newnames_pY_Set2[&quot;Annotated Sequence&quot;] &lt;- &quot;Annotated_Sequence&quot;
+colnames(pY_Set2_form) &lt;- newnames_pY_Set2[colnames(pY_Set2_form)]
+mean_normal_pY_Set2 &lt;- pY_Set2_form %&gt;% select(contains(&quot;_ctrl&quot; )) %&gt;%
+  #2^. %&gt;% 
+  rowMeans()
+pY_Set2_form &lt;- pY_Set2_form %&gt;%
+  mutate_at( vars(contains(&quot;log2&quot;) ), function(f){ f - mean_normal_pY_Set2 } ) 
+pY_Set2_form </code></pre>
+<pre><code>## # A tibble: 749 × 22
+##    Annotated_Sequence  HGNC_Symbol log2FC_Xenograft1_ct…¹ log2FC_Xenograft1_ct…²
+##    &lt;chr&gt;               &lt;chr&gt;                        &lt;dbl&gt;                  &lt;dbl&gt;
+##  1 AATSDLEHyDKTR       NUCB2                    -1.27                     0.0781
+##  2 AAVPSGASTGIyEALELR… ENO1                      0.230                    0.206 
+##  3 AAVPSGASTGIyEALELR… ENO1                     -0.567                   -0.190 
+##  4 AAYFGIyDTAK         SLC25A5                  -0.0900                  -0.370 
+##  5 AAyFGIYDTAK         SLC25A5                  -0.128                   -0.187 
+##  6 ACGSSEASAyLDELR     TRPM4                    -0.262                    0.271 
+##  7 ACPDSLGSPAPSHAyHGG… ANO1                     -0.941                   -0.143 
+##  8 ADIVQQLLQQGASPNAAT… ANK3                     -0.486                    0.137 
+##  9 ADPPyTHTIQK         EPS8                      0.000791                 0.189 
+## 10 ADQQYECVAEIGEGAyGK  CDK6                      0.183                   -0.593 
+## # ℹ 739 more rows
+## # ℹ abbreviated names: ¹​log2FC_Xenograft1_ctrl_5d_6_Set2,
+## #   ²​log2FC_Xenograft1_ctrl_5d_7_Set2
+## # ℹ 18 more variables: log2FC_Xenograft1_ctrl_5d_8_Set2 &lt;dbl&gt;,
+## #   log2FC_Xenograft1_ctrl_5d_1_Set2 &lt;dbl&gt;,
+## #   log2FC_Xenograft1_ctrl_5d_5_Set2 &lt;dbl&gt;,
+## #   log2FC_Xenograft1_E_5d_1_Set2 &lt;dbl&gt;, log2FC_Xenograft1_E_5d_2_Set2 &lt;dbl&gt;, …</code></pre>
+<pre class="r"><code>pY_Set3_form &lt;- pY_Set3 %&gt;%
   select(`Annotated Sequence`, HGNC_Symbol, contains(&quot;log2FC&quot;), Master.Protein.Accessions = `Master Protein Accessions`,
                              Master.Protein.Descriptions = `Master Protein Descriptions`)
 newnames_pY_Set3 &lt;- c(name_l_Set3, paste0(&quot;log2FC_&quot;, name_l_Set3 ), name_l_Set3 )
@@ -3210,10 +3307,15 @@ pST_Set5_normXenograft14_form</code></pre>
 <div id="xenografts-1" class="section level5">
 <h5>Xenografts # 1</h5>
 <pre class="r"><code># Combine fold changes over bridge for the pY sets
-pY_Xenograft1 &lt;- left_join( 
-  Minimize_df(pY_Set1, name_l = name_l_Set1, FC = TRUE),
+pY_Xenograft1 &lt;- 
+    left_join(
+  left_join( 
+    Minimize_df(pY_Set1, name_l = name_l_Set1, FC = TRUE),
+    Minimize_df(pY_Set2, name_l = name_l_Set2, FC = TRUE),
+    by = c(&quot;HGNC_Symbol&quot;, &quot;Annotated_Sequence&quot; ) ),
   Minimize_df(pY_Set5_normXenograft1, name_l = name_l_Set5pY_normXenograft1, FC = TRUE),
   by = c(&quot;HGNC_Symbol&quot;, &quot;Annotated_Sequence&quot; ) )
+
 
 pY_Xenograft1 &lt;- left_join(pY_Xenograft1,
           pY_Set1 %&gt;% 
@@ -3236,23 +3338,23 @@ pY_Xenograft1_noNA &lt;- pY_Xenograft1_noNA %&gt;%
   mutate_at( vars(contains(&quot;log2&quot;) ), function(f){ f - mean_normal_pY_Xenograft1 } ) 
  
 pY_Xenograft1_noNA </code></pre>
-<pre><code>## # A tibble: 318 × 36
+<pre><code>## # A tibble: 253 × 54
 ##    Annotated_Sequence  HGNC_Symbol log2FC_Xenograft1_ct…¹ log2FC_Xenograft1_ct…²
 ##    &lt;chr&gt;               &lt;chr&gt;                        &lt;dbl&gt;                  &lt;dbl&gt;
-##  1 AATSGVPSIYAPSTyAHL… LSR                        -0.0139                -0.498 
-##  2 AATSGVPSIyAPSTYAHL… LSR                         0.194                 -0.647 
-##  3 AAYFGIyDTAK         SLC25A5                     0.0850                -0.0183
-##  4 AAyFGIYDTAK         SLC25A5                     0.196                 -0.0381
-##  5 ACGSSEASAyLDELR     TRPM4                      -0.246                  0.133 
-##  6 ADIVQQLLQQGASPNAAT… ANK3                       -0.283                  0.163 
-##  7 ADWTGDEPLPYQPTFSDD… EPS8L3                     -0.455                 -0.203 
-##  8 ADyDTLSLR           PKP3                        0.951                 -1.11  
-##  9 AEERPTFDYLQSVLDDFY… LYN                        -0.265                 -0.416 
-## 10 AEGSDVANAVLDGADCIM… PKM                        -0.298                  0.438 
-## # ℹ 308 more rows
+##  1 AAYFGIyDTAK         SLC25A5                      0.114                 0.0105
+##  2 AAyFGIYDTAK         SLC25A5                      0.206                -0.0275
+##  3 ACGSSEASAyLDELR     TRPM4                       -0.240                 0.138 
+##  4 ADIVQQLLQQGASPNAAT… ANK3                        -0.283                 0.163 
+##  5 ADyDTLSLR           PKP3                         0.955                -1.10  
+##  6 AEERPTFDYLQSVLDDFY… LYN                         -0.263                -0.413 
+##  7 AEGSDVANAVLDGADCIM… PKM                         -0.300                 0.436 
+##  8 AEPEDHyFLLTEPPLNTP… ACTR3                        0.162                 0.122 
+##  9 AHDGGIyAISWSPDSTHL… WDR1                        -0.282                 0.638 
+## 10 ALGNNFyEYYVDDPPR    GCHFR                       -0.136                -0.151 
+## # ℹ 243 more rows
 ## # ℹ abbreviated names: ¹​log2FC_Xenograft1_ctrl_5d_1_Set1,
 ## #   ²​log2FC_Xenograft1_ctrl_5d_2_Set1
-## # ℹ 32 more variables: log2FC_Xenograft1_ctrl_5d_3_Set1 &lt;dbl&gt;,
+## # ℹ 50 more variables: log2FC_Xenograft1_ctrl_5d_3_Set1 &lt;dbl&gt;,
 ## #   log2FC_Xenograft1_ctrl_5d_4_Set1 &lt;dbl&gt;,
 ## #   log2FC_Xenograft1_ctrl_5d_5_Set1 &lt;dbl&gt;,
 ## #   log2FC_Xenograft1_ctrl_5d_7_Set1 &lt;dbl&gt;, …</code></pre>
@@ -3410,7 +3512,7 @@ pST_Xenograft14_noNA </code></pre>
 
 all_pY_sites &lt;- bind_rows(
   pY_Set1_form %&gt;% select(HGNC_Symbol, Annotated_Sequence),
-  #pY_Set2_form %&gt;% select(HGNC_Symbol, Annotated_Sequence),
+  pY_Set2_form %&gt;% select(HGNC_Symbol, Annotated_Sequence),
   pY_Set3_form %&gt;% select(HGNC_Symbol, Annotated_Sequence),
   pY_Set4_form %&gt;% select(HGNC_Symbol, Annotated_Sequence),
   pY_Set5_normXenograft1_form %&gt;% select(HGNC_Symbol, Annotated_Sequence)) %&gt;% unique
@@ -3471,8 +3573,8 @@ all_pY_sites$SITE_GRP_ID &lt;- as.double( apply(all_pY_sites,1, function(x){ Ret
           Regulatory_sites_dataset %&gt;% filter(GENE %in% unique(all_pY_sites$HGNC_Symbol), str_detect(MOD_RSD, &quot;Y&quot;) ) , 
           by = c( &quot;HGNC_Symbol&quot; = &quot;GENE&quot;, &quot;MOD_RSD&quot; )) </code></pre>
 <pre><code>## Warning in left_join(all_pY_sites, Regulatory_sites_dataset %&gt;% filter(GENE %in% : Detected an unexpected many-to-many relationship between `x` and `y`.
-## ℹ Row 1495 of `x` matches multiple rows in `y`.
-## ℹ Row 81 of `y` matches multiple rows in `x`.
+## ℹ Row 1100 of `x` matches multiple rows in `y`.
+## ℹ Row 84 of `y` matches multiple rows in `x`.
 ## ℹ If a many-to-many relationship is expected, set `relationship =
 ##   &quot;many-to-many&quot;` to silence this warning.</code></pre>
 </div>
@@ -3654,24 +3756,30 @@ all_pST_sites$SITE_GRP_ID &lt;- as.double( apply(all_pST_sites,1, function(x){ R
 colnames(pY_Xenograft1_mat) &lt;- paste0( pY_Xenograft1_noNA$HGNC_Symbol, &quot;_&quot;, pY_Xenograft1_noNA$Annotated_Sequence )
 
 pY_Xenograft1_mat[1:5, 1:5]</code></pre>
-<pre><code>##                                  LSR_AATSGVPSIYAPSTyAHLSPAK
-## log2FC_Xenograft1_ctrl_5d_1_Set1                -0.01391738
-## log2FC_Xenograft1_ctrl_5d_2_Set1                -0.49783788
-## log2FC_Xenograft1_ctrl_5d_3_Set1                 0.22539631
-## log2FC_Xenograft1_ctrl_5d_4_Set1                 0.42207016
-## log2FC_Xenograft1_ctrl_5d_5_Set1                -0.29516217
-##                                  LSR_AATSGVPSIyAPSTYAHLSPAK SLC25A5_AAYFGIyDTAK
-## log2FC_Xenograft1_ctrl_5d_1_Set1                 0.19379113          0.08501123
-## log2FC_Xenograft1_ctrl_5d_2_Set1                -0.64665486         -0.01827796
-## log2FC_Xenograft1_ctrl_5d_3_Set1                -0.08503357         -0.36761709
-## log2FC_Xenograft1_ctrl_5d_4_Set1                 0.32504075          0.06836756
-## log2FC_Xenograft1_ctrl_5d_5_Set1                -0.08669620          0.11235394
-##                                  SLC25A5_AAyFGIYDTAK TRPM4_ACGSSEASAyLDELR
-## log2FC_Xenograft1_ctrl_5d_1_Set1          0.19554255           -0.24556778
-## log2FC_Xenograft1_ctrl_5d_2_Set1         -0.03811342            0.13295382
-## log2FC_Xenograft1_ctrl_5d_3_Set1         -0.69932825           -0.26856961
-## log2FC_Xenograft1_ctrl_5d_4_Set1          0.12900368           -0.13198873
-## log2FC_Xenograft1_ctrl_5d_5_Set1          0.16299315           -0.05374947</code></pre>
+<pre><code>##                                  SLC25A5_AAYFGIyDTAK SLC25A5_AAyFGIYDTAK
+## log2FC_Xenograft1_ctrl_5d_1_Set1          0.11382688          0.20617262
+## log2FC_Xenograft1_ctrl_5d_2_Set1          0.01053769         -0.02748335
+## log2FC_Xenograft1_ctrl_5d_3_Set1         -0.33880144         -0.68869818
+## log2FC_Xenograft1_ctrl_5d_4_Set1          0.09718321          0.13963375
+## log2FC_Xenograft1_ctrl_5d_5_Set1          0.14116959          0.17362321
+##                                  TRPM4_ACGSSEASAyLDELR
+## log2FC_Xenograft1_ctrl_5d_1_Set1            -0.2404845
+## log2FC_Xenograft1_ctrl_5d_2_Set1             0.1380371
+## log2FC_Xenograft1_ctrl_5d_3_Set1            -0.2634863
+## log2FC_Xenograft1_ctrl_5d_4_Set1            -0.1269054
+## log2FC_Xenograft1_ctrl_5d_5_Set1            -0.0486662
+##                                  ANK3_ADIVQQLLQQGASPNAATTSGyTPLHLSAR
+## log2FC_Xenograft1_ctrl_5d_1_Set1                          -0.2828851
+## log2FC_Xenograft1_ctrl_5d_2_Set1                           0.1633598
+## log2FC_Xenograft1_ctrl_5d_3_Set1                           0.0723321
+## log2FC_Xenograft1_ctrl_5d_4_Set1                           0.4822041
+## log2FC_Xenograft1_ctrl_5d_5_Set1                          -0.4629773
+##                                  PKP3_ADyDTLSLR
+## log2FC_Xenograft1_ctrl_5d_1_Set1     0.95514789
+## log2FC_Xenograft1_ctrl_5d_2_Set1    -1.10206923
+## log2FC_Xenograft1_ctrl_5d_3_Set1     0.07460718
+## log2FC_Xenograft1_ctrl_5d_4_Set1    -0.08053527
+## log2FC_Xenograft1_ctrl_5d_5_Set1    -0.53208066</code></pre>
 </div>
 <div id="xenograft-14" class="section level5">
 <h5>Xenograft #14</h5>
@@ -3731,16 +3839,39 @@ pY_mat_Set1[1:5, 1:5]</code></pre>
 ## log2FC_Xenograft1_ctrl_5d_3_Set1                   0.7442778
 ## log2FC_Xenograft1_ctrl_5d_4_Set1                   0.9193946
 ## log2FC_Xenograft1_ctrl_5d_5_Set1                  -1.3016477</code></pre>
-<pre class="r"><code>#### Set 2
-#pY_mat_Set2 &lt;- pY_Set2_form %&gt;% 
-#  select(-HGNC_Symbol, -Annotated_Sequence,           
-#         -Master.Protein.Descriptions, -Master.Protein.Accessions) %&gt;%
-#  as.matrix() %&gt;% 
-#  t()
-#colnames(pY_mat_Set2) &lt;- paste0( pY_Set2_form$HGNC_Symbol, &quot;_&quot;, #pY_Set2_form$Annotated_Sequence )
-#pY_mat_Set2[1:5, 1:5]
-
-### Set 3
+<pre class="r"><code>### Set 2
+pY_mat_Set2 &lt;- pY_Set2_form %&gt;% 
+  select(-HGNC_Symbol, -Annotated_Sequence,           
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %&gt;%
+  as.matrix() %&gt;% 
+  t()
+colnames(pY_mat_Set2) &lt;- paste0( pY_Set2_form$HGNC_Symbol, &quot;_&quot;, pY_Set2_form$Annotated_Sequence )
+pY_mat_Set2[1:5, 1:5]</code></pre>
+<pre><code>##                                  NUCB2_AATSDLEHyDKTR
+## log2FC_Xenograft1_ctrl_5d_6_Set2          -1.2670631
+## log2FC_Xenograft1_ctrl_5d_7_Set2           0.0781455
+## log2FC_Xenograft1_ctrl_5d_8_Set2           0.4977479
+## log2FC_Xenograft1_ctrl_5d_1_Set2           0.4837537
+## log2FC_Xenograft1_ctrl_5d_5_Set2           0.2074160
+##                                  ENO1_AAVPSGASTGIyEALELRDNDK
+## log2FC_Xenograft1_ctrl_5d_6_Set2                  0.22952003
+## log2FC_Xenograft1_ctrl_5d_7_Set2                  0.20639585
+## log2FC_Xenograft1_ctrl_5d_8_Set2                 -0.34934286
+## log2FC_Xenograft1_ctrl_5d_1_Set2                 -0.01975568
+## log2FC_Xenograft1_ctrl_5d_5_Set2                 -0.06681733
+##                                  ENO1_AAVPSGASTGIyEALELRDNDKTR
+## log2FC_Xenograft1_ctrl_5d_6_Set2                   -0.56659593
+## log2FC_Xenograft1_ctrl_5d_7_Set2                   -0.19015931
+## log2FC_Xenograft1_ctrl_5d_8_Set2                    0.60422451
+## log2FC_Xenograft1_ctrl_5d_1_Set2                   -0.06414175
+## log2FC_Xenograft1_ctrl_5d_5_Set2                    0.21667248
+##                                  SLC25A5_AAYFGIyDTAK SLC25A5_AAyFGIYDTAK
+## log2FC_Xenograft1_ctrl_5d_6_Set2         -0.08998528          -0.1277998
+## log2FC_Xenograft1_ctrl_5d_7_Set2         -0.37025357          -0.1867540
+## log2FC_Xenograft1_ctrl_5d_8_Set2          0.22241725           0.1277417
+## log2FC_Xenograft1_ctrl_5d_1_Set2          0.83482237           0.6601968
+## log2FC_Xenograft1_ctrl_5d_5_Set2         -0.59700076          -0.4733847</code></pre>
+<pre class="r"><code>### Set 3
 pY_mat_Set3 &lt;- pY_Set3_form %&gt;% 
   select(-HGNC_Symbol, -Annotated_Sequence,           
          -Master.Protein.Descriptions, -Master.Protein.Accessions) %&gt;%
@@ -4152,13 +4283,13 @@ validObject(pY_Xenograft1_se)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>pY_Xenograft1_se</code></pre>
 <pre><code>## class: SummarizedExperiment 
-## dim: 318 32 
+## dim: 253 50 
 ## metadata(0):
 ## assays(1): &#39;&#39;
-## rownames(318): LSR_AATSGVPSIYAPSTyAHLSPAK LSR_AATSGVPSIyAPSTYAHLSPAK
-##   ... POF1B_yVVQNPEQEPLSQFLR LHPP_yYKETSGLMLDVGPYMK
+## rownames(253): SLC25A5_AAYFGIyDTAK SLC25A5_AAyFGIYDTAK ...
+##   TEC_YVLDDQyTSSSGAK LHPP_yYKETSGLMLDVGPYMK
 ## rowData names(6): Annotated_Sequence HGNC_Symbol ... ID name
-## colnames(32): log2FC_Xenograft1_ctrl_5d_1_Set1
+## colnames(50): log2FC_Xenograft1_ctrl_5d_1_Set1
 ##   log2FC_Xenograft1_ctrl_5d_2_Set1 ...
 ##   log2FC_Xenograft14_ctrl_5d_5_Set5 log2FC_Xenograft14_ctrl_5d_6_Set5
 ## colData names(8): log2FC Xenograft ... label ID</code></pre>
@@ -4280,6 +4411,64 @@ validObject(pY_se_Set1)</code></pre>
 ## colnames(18): log2FC_Xenograft1_ctrl_5d_1_Set1
 ##   log2FC_Xenograft1_ctrl_5d_2_Set1 ... log2FC_Xenograft1_EBC_24h_3_Set1
 ##   log2FC_Xenograft1_EBC_24h_4_Set1
+## colData names(8): log2FC Xenograft ... label ID</code></pre>
+</div>
+<div id="set-2" class="section level6">
+<h6>Set 2</h6>
+<pre class="r"><code># Assay data
+assay_data_pY_Set2 &lt;- 
+  pY_Set2_form %&gt;% 
+  mutate(coln = paste0(HGNC_Symbol, &quot;_&quot;, Annotated_Sequence)) %&gt;%
+  as.data.frame() %&gt;% 
+  column_to_rownames(&quot;coln&quot;) %&gt;%
+  select( -Annotated_Sequence, -HGNC_Symbol, 
+         -Master.Protein.Descriptions, -Master.Protein.Accessions) %&gt;%
+  as.matrix()
+
+#colnames(assay_data_pY_Set2) &lt;- gsub(&quot;log2FC_Xenograft_&quot;, &quot;&quot;, colnames(assay_data_pY_Set2) )
+
+# RowData
+rowData_pY_Set2 &lt;- 
+  pY_Set2_form %&gt;%
+  select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Descriptions, Master.Protein.Accessions) %&gt;%
+  mutate(coln = paste0(HGNC_Symbol, &quot;_&quot;, Annotated_Sequence)) %&gt;%
+  mutate(ID = paste0(HGNC_Symbol, &quot;_&quot;, Annotated_Sequence), 
+         name = paste0(HGNC_Symbol, &quot;_&quot;, Annotated_Sequence)) %&gt;%
+  as.data.frame() %&gt;% 
+  column_to_rownames(&quot;coln&quot;)
+
+
+# ColData
+colData_pY_Set2 &lt;- 
+  str_split( 
+    #gsub(&quot;log2FC_Xenograft_&quot;, &quot;&quot;, 
+         colnames(assay_data_pY_Set2 #) 
+                  ), pattern = &quot;_&quot;, simplify = TRUE ) %&gt;%
+  as.data.frame()
+rownames(colData_pY_Set2) &lt;- #gsub(&quot;log2FC_Xenograft_&quot;, &quot;&quot;, 
+                                  colnames(assay_data_pY_Set2) #)
+colnames(colData_pY_Set2) &lt;- c( &quot;log2FC&quot;, &quot;Xenograft&quot;, &quot;condition&quot;, &quot;day&quot;, &quot;replicate&quot;, &quot;set&quot; )
+colData_pY_Set2$label &lt;- #gsub(&quot;log2FC_Xenograft_&quot;, &quot;&quot;, 
+                              colnames(assay_data_pY_Set2) #)
+colData_pY_Set2$ID &lt;- #gsub(&quot;log2FC_Xenograft_&quot;, &quot;&quot;, 
+                           colnames(assay_data_pY_Set2) #)
+
+pY_se_Set2 &lt;- SummarizedExperiment(assays = assay_data_pY_Set2,
+                           colData = colData_pY_Set2,
+                           rowData = rowData_pY_Set2)
+validObject(pY_se_Set2)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>pY_se_Set2</code></pre>
+<pre><code>## class: SummarizedExperiment 
+## dim: 749 18 
+## metadata(0):
+## assays(1): &#39;&#39;
+## rownames(749): NUCB2_AATSDLEHyDKTR ENO1_AAVPSGASTGIyEALELRDNDK ...
+##   LHPP_yYKETSGLMLDVGPYMK PSMB2_yYTPTISR
+## rowData names(6): Annotated_Sequence HGNC_Symbol ... ID name
+## colnames(18): log2FC_Xenograft1_ctrl_5d_6_Set2
+##   log2FC_Xenograft1_ctrl_5d_7_Set2 ... log2FC_Xenograft1_EBC_5d_3_Set2
+##   log2FC_Xenograft1_EBC_5d_4_Set2
 ## colData names(8): log2FC Xenograft ... label ID</code></pre>
 </div>
 <div id="set-3" class="section level6">
@@ -4697,7 +4886,7 @@ validObject(pST_se_Set1)</code></pre>
 ##   log2FC_Xenograft1_EBC_24h_4_Set1
 ## colData names(8): log2FC Xenograft ... label ID</code></pre>
 </div>
-<div id="set-2" class="section level6">
+<div id="set-2-1" class="section level6">
 <h6>Set 2</h6>
 <pre class="r"><code># Assay data
 assay_data_pST_Set2 &lt;- 
@@ -5000,24 +5189,30 @@ validObject(pST_se_Set5_normXenograft14)</code></pre>
 <pre><code>## Warning: useNames = NA is deprecated. Instead, specify either useNames = TRUE
 ## or useNames = TRUE.</code></pre>
 <pre class="r"><code>pY_Xenograft1_mat_normtomedian[1:5,1:5]</code></pre>
-<pre><code>##                                  LSR_AATSGVPSIYAPSTyAHLSPAK
-## log2FC_Xenograft1_ctrl_5d_1_Set1                 0.05398018
-## log2FC_Xenograft1_ctrl_5d_2_Set1                -0.42994032
-## log2FC_Xenograft1_ctrl_5d_3_Set1                 0.29329387
-## log2FC_Xenograft1_ctrl_5d_4_Set1                 0.48996772
-## log2FC_Xenograft1_ctrl_5d_5_Set1                -0.22726461
-##                                  LSR_AATSGVPSIyAPSTYAHLSPAK SLC25A5_AAYFGIyDTAK
-## log2FC_Xenograft1_ctrl_5d_1_Set1               0.2792080960           0.2882120
-## log2FC_Xenograft1_ctrl_5d_2_Set1              -0.5612379021           0.1849228
-## log2FC_Xenograft1_ctrl_5d_3_Set1               0.0003833903          -0.1644164
-## log2FC_Xenograft1_ctrl_5d_4_Set1               0.4104577153           0.2715683
-## log2FC_Xenograft1_ctrl_5d_5_Set1              -0.0012792385           0.3155547
-##                                  SLC25A5_AAyFGIYDTAK TRPM4_ACGSSEASAyLDELR
-## log2FC_Xenograft1_ctrl_5d_1_Set1          0.17389318           -0.43812134
-## log2FC_Xenograft1_ctrl_5d_2_Set1         -0.05976279           -0.05959975
-## log2FC_Xenograft1_ctrl_5d_3_Set1         -0.72097762           -0.46112317
-## log2FC_Xenograft1_ctrl_5d_4_Set1          0.10735431           -0.32454229
-## log2FC_Xenograft1_ctrl_5d_5_Set1          0.14134378           -0.24630303</code></pre>
+<pre><code>##                                  SLC25A5_AAYFGIyDTAK SLC25A5_AAyFGIYDTAK
+## log2FC_Xenograft1_ctrl_5d_1_Set1           0.2443298          0.16770521
+## log2FC_Xenograft1_ctrl_5d_2_Set1           0.1410406         -0.06595076
+## log2FC_Xenograft1_ctrl_5d_3_Set1          -0.2082986         -0.72716559
+## log2FC_Xenograft1_ctrl_5d_4_Set1           0.2276861          0.10116634
+## log2FC_Xenograft1_ctrl_5d_5_Set1           0.2716725          0.13515580
+##                                  TRPM4_ACGSSEASAyLDELR
+## log2FC_Xenograft1_ctrl_5d_1_Set1            -0.5149210
+## log2FC_Xenograft1_ctrl_5d_2_Set1            -0.1363994
+## log2FC_Xenograft1_ctrl_5d_3_Set1            -0.5379228
+## log2FC_Xenograft1_ctrl_5d_4_Set1            -0.4013419
+## log2FC_Xenograft1_ctrl_5d_5_Set1            -0.3231027
+##                                  ANK3_ADIVQQLLQQGASPNAATTSGyTPLHLSAR
+## log2FC_Xenograft1_ctrl_5d_1_Set1                          -0.5851607
+## log2FC_Xenograft1_ctrl_5d_2_Set1                          -0.1389158
+## log2FC_Xenograft1_ctrl_5d_3_Set1                          -0.2299435
+## log2FC_Xenograft1_ctrl_5d_4_Set1                           0.1799285
+## log2FC_Xenograft1_ctrl_5d_5_Set1                          -0.7652529
+##                                  PKP3_ADyDTLSLR
+## log2FC_Xenograft1_ctrl_5d_1_Set1      1.3108104
+## log2FC_Xenograft1_ctrl_5d_2_Set1     -0.7464067
+## log2FC_Xenograft1_ctrl_5d_3_Set1      0.4302697
+## log2FC_Xenograft1_ctrl_5d_4_Set1      0.2751273
+## log2FC_Xenograft1_ctrl_5d_5_Set1     -0.1764181</code></pre>
 <pre class="r"><code>pY_Xenograft14_mat_normtomedian &lt;- t(log2(t(2^pY_Xenograft14_mat)/colMedians(2^pY_Xenograft14_mat) ))</code></pre>
 <pre><code>## Warning: useNames = NA is deprecated. Instead, specify either useNames = TRUE
 ## or useNames = TRUE.</code></pre>
@@ -5065,10 +5260,35 @@ validObject(pST_se_Set5_normXenograft14)</code></pre>
 ## log2FC_Xenograft1_ctrl_5d_3_Set1                 -0.23498254
 ## log2FC_Xenograft1_ctrl_5d_4_Set1                 -0.05986567
 ## log2FC_Xenograft1_ctrl_5d_5_Set1                 -2.28090800</code></pre>
-<pre class="r"><code>#pY_mat_Set2_normtomedian &lt;- t(log2(t(2^pY_mat_Set2)/colMedians(2^pY_mat_Set2) ))
-#pY_mat_Set2_normtomedian[1:5,1:5]
-
-pY_mat_Set3_normtomedian &lt;- t(log2(t(2^pY_mat_Set3)/colMedians(2^pY_mat_Set3) ))</code></pre>
+<pre class="r"><code>pY_mat_Set2_normtomedian &lt;- t(log2(t(2^pY_mat_Set2)/colMedians(2^pY_mat_Set2) ))</code></pre>
+<pre><code>## Warning: useNames = NA is deprecated. Instead, specify either useNames = TRUE
+## or useNames = TRUE.</code></pre>
+<pre class="r"><code>pY_mat_Set2_normtomedian[1:5,1:5]</code></pre>
+<pre><code>##                                  NUCB2_AATSDLEHyDKTR
+## log2FC_Xenograft1_ctrl_5d_6_Set2          -1.9785293
+## log2FC_Xenograft1_ctrl_5d_7_Set2          -0.6333207
+## log2FC_Xenograft1_ctrl_5d_8_Set2          -0.2137183
+## log2FC_Xenograft1_ctrl_5d_1_Set2          -0.2277125
+## log2FC_Xenograft1_ctrl_5d_5_Set2          -0.5040502
+##                                  ENO1_AAVPSGASTGIyEALELRDNDK
+## log2FC_Xenograft1_ctrl_5d_6_Set2                  0.01151576
+## log2FC_Xenograft1_ctrl_5d_7_Set2                 -0.01160842
+## log2FC_Xenograft1_ctrl_5d_8_Set2                 -0.56734713
+## log2FC_Xenograft1_ctrl_5d_1_Set2                 -0.23775995
+## log2FC_Xenograft1_ctrl_5d_5_Set2                 -0.28482160
+##                                  ENO1_AAVPSGASTGIyEALELRDNDKTR
+## log2FC_Xenograft1_ctrl_5d_6_Set2                   -0.76734383
+## log2FC_Xenograft1_ctrl_5d_7_Set2                   -0.39090721
+## log2FC_Xenograft1_ctrl_5d_8_Set2                    0.40347661
+## log2FC_Xenograft1_ctrl_5d_1_Set2                   -0.26488965
+## log2FC_Xenograft1_ctrl_5d_5_Set2                    0.01592457
+##                                  SLC25A5_AAYFGIyDTAK SLC25A5_AAyFGIYDTAK
+## log2FC_Xenograft1_ctrl_5d_6_Set2         -0.21573168         -0.18540129
+## log2FC_Xenograft1_ctrl_5d_7_Set2         -0.49599996         -0.24435554
+## log2FC_Xenograft1_ctrl_5d_8_Set2          0.09667085          0.07014022
+## log2FC_Xenograft1_ctrl_5d_1_Set2          0.70907598          0.60259524
+## log2FC_Xenograft1_ctrl_5d_5_Set2         -0.72274715         -0.53098627</code></pre>
+<pre class="r"><code>pY_mat_Set3_normtomedian &lt;- t(log2(t(2^pY_mat_Set3)/colMedians(2^pY_mat_Set3) ))</code></pre>
 <pre><code>## Warning: useNames = NA is deprecated. Instead, specify either useNames = TRUE
 ## or useNames = TRUE.</code></pre>
 <pre class="r"><code>pY_mat_Set3_normtomedian[1:5,1:5]</code></pre>
@@ -5423,7 +5643,7 @@ pY_mat_Set3_normtomedian &lt;- t(log2(t(2^pY_mat_Set3)/colMedians(2^pY_mat_Set3)
 ## [23] BiocGenerics_0.44.0         fgsea_1.24.0               
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] readxl_1.4.3           circlize_0.4.15        fastmatch_1.1-3       
+##   [1] readxl_1.4.3           circlize_0.4.15        fastmatch_1.1-4       
 ##   [4] igraph_1.5.1           plyr_1.8.8             gmm_1.8               
 ##   [7] shinydashboard_0.7.2   BiocParallel_1.32.6    digest_0.6.33         
 ##  [10] foreach_1.5.2          htmltools_0.5.6        fansi_1.0.4           

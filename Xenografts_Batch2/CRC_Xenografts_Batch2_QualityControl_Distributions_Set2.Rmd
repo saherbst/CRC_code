@@ -39,14 +39,14 @@ source("CRC_Xenografts_Batch2_Functions.R")
 # Quality control
 ## Nr. phospho sites
 ```{r}
-#print( paste( nrow(pY_Set2_form) , "pY peptides passed the filtering procedure for this Set. These peptides were detected from", length(unique(pY_Set2_form$HGNC_Symbol) ), "proteins." ))
-print( paste( nrow(pST_Set2_form) , "pY peptides passed the filtering procedure for this Set. These peptides were detected from", length(unique(pST_Set2_form$HGNC_Symbol) ), "proteins." ))
+print( paste( nrow(pY_Set2_form) , "pY peptides passed the filtering procedure for this Set. These peptides were detected from", length(unique(pY_Set2_form$HGNC_Symbol) ), "proteins." ))
+print( paste( nrow(pST_Set2_form) , "pST peptides passed the filtering procedure for this Set. These peptides were detected from", length(unique(pST_Set2_form$HGNC_Symbol) ), "proteins." ))
 ```
 
 ## Distributions
 ### pY Abundances
 #### Colored by treatment
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 pY_Set2_form %>%
   select(contains("log2FC")) %>%
   pivot_longer(names_to = "Sample", cols = everything()) %>%

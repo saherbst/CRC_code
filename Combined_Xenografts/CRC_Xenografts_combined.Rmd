@@ -119,14 +119,18 @@ pY_Set5_Xenograft1_form <- pY_Set5_normXenograft1_form %>%
 pY_Set5_Xenograft14_form <- pY_Set5_normXenograft14_form %>% 
   select(Annotated_Sequence, HGNC_Symbol, Master.Protein.Accessions, Master.Protein.Descriptions, contains("log2FC_Xenograft14_"))
 
+warning("Temporary fix for issue with proteins MRPL58, MRPL58, RPL10A, RACK1, RPS12 and RPL15. Removed them for now.")
+
 all_pY_peptides_form <- rbind( (pY_Set1_form %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ), 
-(pY_Set3_form %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ), 
-(pY_Set4_form %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ),  
-(pY_Set5_Xenograft1_form %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ), 
-(pY_Set5_Xenograft14_form  %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ) )%>%
+                               (pY_Set2_form %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') %>%
+                                  filter(!HGNC_Symbol %in% c( "MRPL58", "MRPL58", "RACK1", "RPL10A", "RPS12",  "RPL15" ))), 
+                               (pY_Set3_form %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ), 
+                               (pY_Set4_form %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ),  
+                               (pY_Set5_Xenograft1_form %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ), 
+                               (pY_Set5_Xenograft14_form  %>% select('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions') ) )%>%
   unique
 
-pY_Batch2_form <- plyr::join_all(list(all_pY_peptides_form, pY_Set1_form,
+pY_Batch2_form <- plyr::join_all(list(all_pY_peptides_form, pY_Set1_form,  pY_Set2_form,
                     pY_Set3_form,pY_Set4_form, 
                     pY_Set5_Xenograft1_form, pY_Set5_Xenograft14_form ), 
                by=c('Annotated_Sequence', 'HGNC_Symbol', 'Master.Protein.Accessions', 'Master.Protein.Descriptions' ), 

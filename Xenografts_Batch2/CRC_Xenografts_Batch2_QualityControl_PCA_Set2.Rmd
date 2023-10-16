@@ -39,13 +39,13 @@ source("CRC_Xenografts_Batch2_Functions.R")
 # Quality control
 ## Nr. phospho sites
 ```{r}
-#print( paste( nrow(pY_Set2_form) , "pY peptides passed the filtering procedure for the sets combined. These peptides were detected from", length(unique(pY_Set2_form$HGNC_Symbol) ), "proteins." ))
+print( paste( nrow(pY_Set2_form) , "pY peptides passed the filtering procedure for the sets combined. These peptides were detected from", length(unique(pY_Set2_form$HGNC_Symbol) ), "proteins." ))
 print( paste( nrow(pST_Set2_form) , "pST peptides passed the filtering procedure for the sets combined. These peptides were detected from", length(unique(pST_Set2_form$HGNC_Symbol) ), "proteins." ))
 ```
 
 ## Principle component analysis
 ### Phospho-Tyrosines
-```{r, fig.width=3, fig.height=3, eval=FALSE}
+```{r, fig.width=3, fig.height=3, eval=TRUE}
 pY_mat_Set2 %>%
   prcomp() %>% 
   summary() %>% 
@@ -59,7 +59,7 @@ pY_mat_Set2 %>%
   theme(axis.text.x = element_text(angle = 90))
 ```
 
-```{r, fig.width=9, fig.height=3, eval=FALSE}
+```{r, fig.width=9, fig.height=3, eval=TRUE}
 PCA_pY <- pY_mat_Set2 %>%
   prcomp() %>% 
   .$x %>% 
@@ -109,7 +109,7 @@ ggpubr::ggarrange(PCA12_pY, ggplot() + geom_blank() )
 
 These are the weights of the peptides loaded onto the principle components:
 
-```{r, fig.width=4, fig.height=3, eval=FALSE}
+```{r, fig.width=4, fig.height=3, eval=TRUE}
 PCcolspY <- match(  c("HGNC_Symbol", "PC1", "PC2", "PC3", "PC4", "Annotated_Sequence") , colnames(PCApY_rot))
 DT::datatable( PCApY_rot[,PCcolspY], 
               class = 'cell-border stripe', rownames = FALSE) %>% 
