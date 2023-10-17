@@ -197,6 +197,11 @@ EC_vs_ctrl_pST_7AA <- left_join( (rowData(dep_EC_vs_ctrl_pST) %>% as_tibble() %>
 # Save
 ```{r}
 EC_vs_ctrl_pST_7AA %>% select(peptide, fc, p)  %>% write.table(file = "../Data/Kinase_enrichment/Batch2_Set2_EC_vs_ctrl_pST_7AA.txt", quote = FALSE, row.names = F, col.names = F, sep = "\t")
+
+rowData(dep_EC_vs_ctrl_pY) %>% as_tibble() %>% 
+  filter(EC_vs_ctrl_diff>1) %>%
+  select(HGNC_Symbol ) %>% unique() %>%
+  write.table("../Data/Kinase_enrichment/Batch2_Set2_EC_vs_ctrl_pY_FCmorethan1_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
 ```
 
 # Session Info
