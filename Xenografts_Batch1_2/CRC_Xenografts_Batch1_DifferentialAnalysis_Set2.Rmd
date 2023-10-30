@@ -38,22 +38,42 @@ source("../../../General/Code/Analysis_Functions.R")
 source("CRC_Xenografts_Batch1_Functions.R")
 ```
 
+### PTMsigDB
+```{r}
+PtmSigdb <- readxl::read_excel("../../../General/Code/Data/db_ptm.sig.db.all.v2.0.0/data_PTMsigDB_all_sites_v2.0.0.xlsx")
+```
+
 # Analysis
 ## DEP
-### Tyrosine all
-#### Each condition vs ctrl
+### Tyrosine
+#### E vs ctrl
 ```{r, eval=TRUE}
-data_diff_ctrl_vs_E_pY <- test_diff(pY_se_Set2, type="manual", test = "E_vs_ctrl")
-dep_ctrl_vs_E_pY <- add_rejections_SH(data_diff_ctrl_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
-GGPlotly_Volcano(dep_ctrl_vs_E_pY, contrast = "E_vs_ctrl", 
-                add_names = TRUE,
-                additional_title = "pY")
+data_diff_E_vs_ctrl_pY <- test_diff(pY_se_Set2, type="manual", test = "E_vs_ctrl")
+dep_E_vs_ctrl_pY <- add_rejections_SH(data_diff_E_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_E_vs_ctrl_pY, contrast = "E_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pY") 
 ```
 
 ```{r, fig.width=10, fig.height=10}
-Return_DEP_Hits_Plots(data = pY_Set2_form, dep_ctrl_vs_E_pY, comparison = "E_vs_ctrl_diff")
+Return_DEP_Hits_Plots(data = pY_Set2_form, dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff")
 ```
 
+##### PTM-SEA
+```{r}
+GSEA_E_vs_ctrl_PTM <- Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T)
+GSEA_E_vs_ctrl_PTM %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+GSEA_E_vs_ctrl_PTM %>% as_tibble() %>%  arrange(desc(NES))
+Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "PATH-NP_EGFR1_PATHWAY")
+Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_Src/SRC")
+Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_EphA2/EPHA2")
+```
+
+#### EC vs ctrl
 ```{r}
 data_diff_EC_vs_ctrl_pY <- test_diff(pY_se_Set2, type="manual", test = "EC_vs_ctrl")
 dep_EC_vs_ctrl_pY <- add_rejections_SH(data_diff_EC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
@@ -71,6 +91,23 @@ Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff"
                                pw = "Epigenetic regulation of gene expression")
 ```
 
+##### PTM-SEA
+```{r}
+GSEA_EC_vs_ctrl_PTM <- Run_GSEA(DEP_result = dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T)
+GSEA_EC_vs_ctrl_PTM %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+GSEA_E_vs_ctrl_PTM %>% as_tibble() %>%  arrange(desc(NES)) %>% filter(size > 9)
+Run_GSEA(DEP_result = dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "PATH-NP_EGFR1_PATHWAY")
+Run_GSEA(DEP_result = dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_Src/SRC")
+Run_GSEA(DEP_result = dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_EphA2/EPHA2")
+Run_GSEA(DEP_result = dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_Ret/RET")
+```
+
+#### EBC vs ctrl
 ```{r}
 data_diff_EBC_vs_ctrl_pY <- test_diff(pY_se_Set2, type="manual", test = "EBC_vs_ctrl")
 dep_EBC_vs_ctrl_pY <- add_rejections_SH(data_diff_EBC_vs_ctrl_pY, alpha = 0.05, lfc = log2(1.2))
@@ -83,19 +120,45 @@ GGPlotly_Volcano(dep_EBC_vs_ctrl_pY, contrast = "EBC_vs_ctrl",
 Return_DEP_Hits_Plots(data = pY_Set2_form, dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff")
 ```
 
+##### PTM-SEA
+```{r}
+GSEA_EBC_vs_ctrl_PTM <- Run_GSEA(DEP_result = dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T)
+GSEA_EBC_vs_ctrl_PTM %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+Run_GSEA(DEP_result = dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "PATH-NP_EGFR1_PATHWAY")
+Run_GSEA(DEP_result = dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_Src/SRC")
+Run_GSEA(DEP_result = dep_EBC_vs_ctrl_pY, comparison = "EBC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_EphA2/EPHA2")
+```
+
 
 #### EC vs E
 ```{r}
 data_diff_EC_vs_E_pY <- test_diff(pY_se_Set2, type = "manual", 
                               test = c("EC_vs_E"))
 dep_EC_vs_E_pY <- add_rejections_SH(data_diff_EC_vs_E_pY, alpha = 0.05, lfc = log2(1.2))
-GGPlotly_Volcano(dep_EC_vs_E_pY, additional_title = "pY", contrast = "EC_vs_E", proteins_of_interest = "EGFR")
+GGPlotly_Volcano(dep_EC_vs_E_pY, contrast = "EC_vs_E",  add_names = TRUE, additional_title = "pY", proteins_of_interest = "EGFR")
 ```
 
 ```{r, fig.width=10, fig.height=10}
 Return_DEP_Hits_Plots(data = pY_Set2_form, dep_EC_vs_E_pY, comparison = "EC_vs_E_diff")
 
 #data_results <- get_df_long(dep)
+```
+
+##### PTM-SEA
+```{r}
+GSEA_EC_vs_E_PTM <- Run_GSEA(DEP_result = dep_EC_vs_E_pY, comparison = "EC_vs_E_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T)
+GSEA_EC_vs_E_PTM %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+Run_GSEA(DEP_result = dep_EC_vs_E_pY, comparison = "EC_vs_E_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "PATH-NP_EGFR1_PATHWAY")
+Run_GSEA(DEP_result = dep_EC_vs_E_pY, comparison = "EC_vs_E_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_Src/SRC")
+Run_GSEA(DEP_result = dep_EC_vs_E_pY, comparison = "EC_vs_E_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_EphA2/EPHA2")
 ```
 
 #### EBC vs EC
@@ -112,12 +175,100 @@ Return_DEP_Hits_Plots(data = pY_Set2_form, dep_EBC_vs_EC_pY, comparison = "EBC_v
 #data_results <- get_df_long(dep)
 ```
 
+##### PTM-SEA
+```{r}
+GSEA_EBC_vs_EC_PTM <- Run_GSEA(DEP_result = dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T)
+GSEA_EBC_vs_EC_PTM %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+Run_GSEA(DEP_result = dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "PATH-NP_EGFR1_PATHWAY")
+Run_GSEA(DEP_result = dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_Src/SRC")
+Run_GSEA(DEP_result = dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_EphA2/EPHA2")
+
+```
+
+
+### Serine/threonine
+#### Each condition vs ctrl
+```{r, eval=TRUE}
+data_diff_E_vs_ctrl_pST <- test_diff(pST_se_Set2, type="manual", test = "E_vs_ctrl")
+dep_E_vs_ctrl_pST <- add_rejections_SH(data_diff_E_vs_ctrl_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_E_vs_ctrl_pST, contrast = "E_vs_ctrl", 
+                add_names = TRUE,
+                additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_E_vs_ctrl_pST, comparison = "E_vs_ctrl_diff")
+```
+
+```{r}
+data_diff_EC_vs_ctrl_pST <- test_diff(pST_se_Set2, type="manual", test = "EC_vs_ctrl")
+dep_EC_vs_ctrl_pST <- add_rejections_SH(data_diff_EC_vs_ctrl_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EC_vs_ctrl_pST, contrast = "EC_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pST") 
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EC_vs_ctrl_pST, comparison = "EC_vs_ctrl_diff")
+```
+
+```{r, eval=FALSE}
+Plot_Enrichment_Single_Pathway(dep_EC_vs_ctrl_pST, comparison = "EC_vs_ctrl_diff", 
+                               pw = "Epigenetic regulation of gene expression")
+```
+
+```{r}
+data_diff_EBC_vs_ctrl_pST <- test_diff(pST_se_Set2, type="manual", test = "EBC_vs_ctrl")
+dep_EBC_vs_ctrl_pST <- add_rejections_SH(data_diff_EBC_vs_ctrl_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EBC_vs_ctrl_pST, contrast = "EBC_vs_ctrl", 
+                 add_names = TRUE,
+                additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EBC_vs_ctrl_pST, comparison = "EBC_vs_ctrl_diff")
+```
+
+
+#### EC vs E
+```{r}
+data_diff_EC_vs_E_pST <- test_diff(pST_se_Set2, type = "manual", 
+                              test = c("EC_vs_E"))
+dep_EC_vs_E_pST <- add_rejections_SH(data_diff_EC_vs_E_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EC_vs_E_pST, additional_title = "pST", contrast = "EC_vs_E", proteins_of_interest = "EGFR")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EC_vs_E_pST, comparison = "EC_vs_E_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+#### EBC vs EC
+```{r}
+data_diff_EBC_vs_EC_pST <- test_diff(pST_se_Set2, type = "manual", 
+                              test = c("EBC_vs_EC"))
+dep_EBC_vs_EC_pST <- add_rejections_SH(data_diff_EBC_vs_EC_pST, alpha = 0.05, lfc = log2(1.2))
+GGPlotly_Volcano(dep_EBC_vs_EC_pST, contrast = "EBC_vs_EC",  add_names = TRUE, additional_title = "pST")
+```
+
+```{r, fig.width=10, fig.height=10}
+Return_DEP_Hits_Plots(data = pST_Set2_form, dep_EBC_vs_EC_pST, comparison = "EBC_vs_EC_diff")
+
+#data_results <- get_df_long(dep)
+```
+
+
 # Save
 ```{r}
-rowData(dep_ctrl_vs_E_pY) %>% as_tibble() %>% select(HGNC_Symbol, E_vs_ctrl_diff) %>% write.table("../Data/Kinase_enrichment/Batch1_Set2_E_vs_ctrl_pY_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
+rowData(dep_E_vs_ctrl_pY) %>% as_tibble() %>% select(HGNC_Symbol, E_vs_ctrl_diff) %>% write.table("../Data/Kinase_enrichment/Batch1_Set2_E_vs_ctrl_pY_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
 rowData(dep_EC_vs_ctrl_pY) %>% as_tibble() %>% select(HGNC_Symbol, EC_vs_ctrl_diff) %>% write.table("../Data/Kinase_enrichment/Batch1_Set2_EC_vs_ctrl_pY_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
 
-rowData(dep_ctrl_vs_E_pY) %>% as_tibble() %>% 
+rowData(dep_E_vs_ctrl_pY) %>% as_tibble() %>% 
   select(HGNC_Symbol, ends_with("_diff")) %>%
   group_by(HGNC_Symbol) %>%
   mutate(abs_FC = abs(E_vs_ctrl_diff) ) %>%
@@ -137,7 +288,7 @@ rowData(dep_EC_vs_ctrl_pY) %>% as_tibble() %>%
   select(HGNC_Symbol, ends_with("_diff") ) %>%
   write.table("../Data/Kinase_enrichment/Batch1_Set2_ECs_vs_ctrl_pY_mostextremeFCperprotein_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")
 
-rowData(dep_ctrl_vs_E_pY) %>% as_tibble() %>% 
+rowData(dep_E_vs_ctrl_pY) %>% as_tibble() %>% 
   filter(E_vs_ctrl_diff>1) %>%
   select(HGNC_Symbol ) %>% unique() %>%
   write.table("../Data/Kinase_enrichment/Batch1_Set2_E_vs_ctrl_pY_FCmorethan1_forstring.txt", quote = F, row.names = F, col.names = F, sep = "\t")

@@ -78,6 +78,11 @@ for(i in 1:nrow(pkidb) ){
 pkidb
 ```
 
+### PTMsigDB
+```{r}
+PtmSigdb <- readxl::read_excel("../../../General/Code/Data/db_ptm.sig.db.all.v2.0.0/data_PTMsigDB_all_sites_v2.0.0.xlsx")
+```
+
 ## File paths
 ### Mass Spec data
 ```{r, warning=FALSE}
@@ -780,13 +785,13 @@ all_pY_sites$DOMAIN <- apply(all_pY_sites,1, function(x){ Return_DOMAIN(x[1], x[
 all_pY_sites$MOD_RSD <- apply(all_pY_sites,1, function(x){ Return_MOD_RSD(x[1], x[3] )}  )
 all_pY_sites$SITE_GRP_ID <- as.double( apply(all_pY_sites,1, function(x){ Return_SITE_GRP_ID(x[1], x[3] )}  ) )
 
-all_pY_sites <- left_join(all_pY_sites,
-          kinase_substrate_dataset %>% select(GENE, KINASE, SUBSTRATE, SUB_GENE, SUB_MOD_RSD, SITE_GRP_ID),
-          by= "SITE_GRP_ID")
-
-all_pY_sites <- left_join(all_pY_sites, 
-          Regulatory_sites_dataset %>% filter(GENE %in% unique(all_pY_sites$HGNC_Symbol), str_detect(MOD_RSD, "Y") ) , 
-          by = c( "HGNC_Symbol" = "GENE", "MOD_RSD" )) 
+#all_pY_sites <- left_join(all_pY_sites,
+#          kinase_substrate_dataset %>% select(GENE, KINASE, SUBSTRATE, SUB_GENE, SUB_MOD_RSD, SITE_GRP_ID),
+#          by= "SITE_GRP_ID")
+#
+#all_pY_sites <- left_join(all_pY_sites, 
+#          Regulatory_sites_dataset %>% filter(GENE %in% unique(all_pY_sites$HGNC_Symbol), str_detect(MOD_RSD, "Y") ) , 
+#          by = c( "HGNC_Symbol" = "GENE", "MOD_RSD" )) 
 ```
 
 #### pST

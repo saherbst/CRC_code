@@ -156,6 +156,7 @@ pY_mat_Batch2 <- pY_Batch2_form %>%
 pY_mat_Batch2[1:5,1:5]
 ```
 
+
 ##### By condition
 ###### All
 ```{r}
@@ -649,15 +650,37 @@ GSEA_E_vs_ctrl %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
 ```
 
 ##### PTM-SEA
+###### All types
 ```{r}
 GSEA_E_vs_ctrl_PTM <- Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
          ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T)
 GSEA_E_vs_ctrl_PTM %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+GSEA_E_vs_ctrl_PTM %>% as_tibble() %>% filter(pathway == "PATH-NP_EGFR1_PATHWAY")
 Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
          ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "PATH-NP_EGFR1_PATHWAY")
 Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
          ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_Src/SRC")
+```
 
+###### Only pathways
+```{r}
+GSEA_E_vs_ctrl_PTM_path <- Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, 
+         PtmSigdb = PtmSigdb %>% filter(str_detect(signature, "^PATH" ) ), 
+         ptmGSEA = T)
+GSEA_E_vs_ctrl_PTM_path %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+GSEA_E_vs_ctrl_PTM_path %>% as_tibble() %>% filter(pathway == "PATH-NP_EGFR1_PATHWAY")
+
+```
+
+###### Only kinases
+```{r}
+GSEA_E_vs_ctrl_PTM_kinase <- Run_GSEA(DEP_result = dep_E_vs_ctrl_pY, comparison = "E_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, 
+         PtmSigdb = PtmSigdb %>% filter(str_detect(signature, "^KINASE" ) ), 
+         ptmGSEA = T)
+GSEA_E_vs_ctrl_PTM_kinase %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+GSEA_E_vs_ctrl_PTM_kinase %>% as_tibble() %>% arrange(desc(NES))
 ```
 
 #### EC vs ctrl
@@ -689,6 +712,16 @@ Run_GSEA(DEP_result = dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", return_
 Run_GSEA(DEP_result = dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", return_df = T,
          ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "KINASE-PSP_Src/SRC")
 
+```
+
+###### Only kinases
+```{r}
+GSEA_EC_vs_ctrl_PTM_kinase <- Run_GSEA(DEP_result = dep_EC_vs_ctrl_pY, comparison = "EC_vs_ctrl_diff", return_df = T,
+         ptmGSEA_site_df = all_pY_sites, 
+         PtmSigdb = PtmSigdb %>% filter(str_detect(signature, "^KINASE" ) ), 
+         ptmGSEA = T)
+GSEA_EC_vs_ctrl_PTM_kinase %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+GSEA_EC_vs_ctrl_PTM_kinase %>% as_tibble() %>% arrange(desc(NES))
 ```
 
 #### EBC vs ctrl
@@ -748,6 +781,7 @@ GSEA_EC_vs_E %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
 GSEA_EC_vs_E_PTM <- Run_GSEA(DEP_result = dep_EC_vs_E_pY, comparison = "EC_vs_E_diff", return_df = T,
          ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T)
 GSEA_EC_vs_E_PTM %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+GSEA_EC_vs_E_PTM %>% as_tibble() %>% filter(pathway == "PATH-NP_EGFR1_PATHWAY")
 Run_GSEA(DEP_result = dep_EC_vs_E_pY, comparison = "EC_vs_E_diff", return_df = T,
          ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "PATH-NP_EGFR1_PATHWAY")
 Run_GSEA(DEP_result = dep_EC_vs_E_pY, comparison = "EC_vs_E_diff", return_df = T,
@@ -779,6 +813,7 @@ GSEA_EBC_vs_EC %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
 GSEA_EBC_vs_EC_PTM <- Run_GSEA(DEP_result = dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff", return_df = T,
          ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T)
 GSEA_EBC_vs_EC_PTM %>% as_tibble() %>% filter(padj < 0.05) %>% arrange(desc(NES))
+GSEA_EBC_vs_EC_PTM %>% as_tibble() %>% filter(pathway == "PATH-NP_EGFR1_PATHWAY")
 Run_GSEA(DEP_result = dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff", return_df = T,
          ptmGSEA_site_df = all_pY_sites, PtmSigdb = PtmSigdb, ptmGSEA = T, single_pathway = "PATH-NP_EGFR1_PATHWAY")
 Run_GSEA(DEP_result = dep_EBC_vs_EC_pY, comparison = "EBC_vs_EC_diff", return_df = T,

@@ -1572,7 +1572,7 @@ border-radius: 0px;
 </div>
 
 
-<p>Analysis date: 2023-10-16</p>
+<p>Analysis date: 2023-10-18</p>
 <p>CRC Xenografts # 1 and #14</p>
 <div id="todo" class="section level1">
 <h1>TODO</h1>
@@ -1695,6 +1695,41 @@ pkidb</code></pre>
 ## #   Targets &lt;chr&gt;, `Kinase families` &lt;chr&gt;, Canonical_Smiles &lt;chr&gt;,
 ## #   InChiKey &lt;chr&gt;, First_Approval &lt;chr&gt;, SC_Patent &lt;chr&gt;, Chirality &lt;chr&gt;,
 ## #   Synonyms &lt;chr&gt;, FDA_approved &lt;lgl&gt;, `Melting point` &lt;chr&gt;</code></pre>
+</div>
+<div id="ptmsigdb" class="section level3">
+<h3>PTMsigDB</h3>
+<pre class="r"><code>PtmSigdb &lt;- readxl::read_excel(&quot;../../../General/Code/Data/db_ptm.sig.db.all.v2.0.0/data_PTMsigDB_all_sites_v2.0.0.xlsx&quot;)</code></pre>
+<pre><code>## Warning: Expecting numeric in D66110 / R66110C4: got &#39;2407414-sm;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66117 / R66117C4: got &#39;3755605-sm;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66118 / R66118C4: got &#39;3829801-sm;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66251 / R66251C4: got &#39;2134717-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66252 / R66252C4: got &#39;2134718-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66508 / R66508C4: got &#39;1668802-me;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66525 / R66525C4: got &#39;1668801-me;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66592 / R66592C4: got &#39;2295400-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66650 / R66650C4: got &#39;60885600-pa;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66651 / R66651C4: got &#39;60885601-pa;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66652 / R66652C4: got &#39;8545503-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66653 / R66653C4: got &#39;8545504-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66654 / R66654C4: got &#39;8545505-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66748 / R66748C4: got &#39;31089521-sm;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D66819 / R66819C4: got &#39;1668802-me;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67030 / R67030C4: got &#39;50455000-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67031 / R67031C4: got &#39;50455001-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67032 / R67032C4: got &#39;50455002-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67043 / R67043C4: got &#39;31094520-me;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67056 / R67056C4: got &#39;27581511-ne;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67057 / R67057C4: got &#39;27581513-ne;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67080 / R67080C4: got &#39;2535901-sm;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67086 / R67086C4: got &#39;25092200-sm;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67087 / R67087C4: got &#39;25092201-sm;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67107 / R67107C4: got &#39;8545502-sm;d&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67128 / R67128C4: got &#39;2586358-me;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67129 / R67129C4: got &#39;2586359-me;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67130 / R67130C4: got &#39;2586360-me;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67505 / R67505C4: got &#39;12723517-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67506 / R67506C4: got &#39;12723518-sm;u&#39;</code></pre>
+<pre><code>## Warning: Expecting numeric in D67511 / R67511C4: got &#39;27850501-sm;d&#39;</code></pre>
 </div>
 </div>
 <div id="file-paths" class="section level2">
@@ -3561,22 +3596,13 @@ all_pY_sites$DOMAIN &lt;- apply(all_pY_sites,1, function(x){ Return_DOMAIN(x[1],
 all_pY_sites$MOD_RSD &lt;- apply(all_pY_sites,1, function(x){ Return_MOD_RSD(x[1], x[3] )}  )
 all_pY_sites$SITE_GRP_ID &lt;- as.double( apply(all_pY_sites,1, function(x){ Return_SITE_GRP_ID(x[1], x[3] )}  ) )</code></pre>
 <pre><code>## Warning: NAs introduced by coercion</code></pre>
-<pre class="r"><code>all_pY_sites &lt;- left_join(all_pY_sites,
-          kinase_substrate_dataset %&gt;% select(GENE, KINASE, SUBSTRATE, SUB_GENE, SUB_MOD_RSD, SITE_GRP_ID),
-          by= &quot;SITE_GRP_ID&quot;)</code></pre>
-<pre><code>## Warning in left_join(all_pY_sites, kinase_substrate_dataset %&gt;% select(GENE, : Detected an unexpected many-to-many relationship between `x` and `y`.
-## ℹ Row 18 of `x` matches multiple rows in `y`.
-## ℹ Row 1499 of `y` matches multiple rows in `x`.
-## ℹ If a many-to-many relationship is expected, set `relationship =
-##   &quot;many-to-many&quot;` to silence this warning.</code></pre>
-<pre class="r"><code>all_pY_sites &lt;- left_join(all_pY_sites, 
-          Regulatory_sites_dataset %&gt;% filter(GENE %in% unique(all_pY_sites$HGNC_Symbol), str_detect(MOD_RSD, &quot;Y&quot;) ) , 
-          by = c( &quot;HGNC_Symbol&quot; = &quot;GENE&quot;, &quot;MOD_RSD&quot; )) </code></pre>
-<pre><code>## Warning in left_join(all_pY_sites, Regulatory_sites_dataset %&gt;% filter(GENE %in% : Detected an unexpected many-to-many relationship between `x` and `y`.
-## ℹ Row 1100 of `x` matches multiple rows in `y`.
-## ℹ Row 84 of `y` matches multiple rows in `x`.
-## ℹ If a many-to-many relationship is expected, set `relationship =
-##   &quot;many-to-many&quot;` to silence this warning.</code></pre>
+<pre class="r"><code>#all_pY_sites &lt;- left_join(all_pY_sites,
+#          kinase_substrate_dataset %&gt;% select(GENE, KINASE, SUBSTRATE, SUB_GENE, SUB_MOD_RSD, SITE_GRP_ID),
+#          by= &quot;SITE_GRP_ID&quot;)
+#
+#all_pY_sites &lt;- left_join(all_pY_sites, 
+#          Regulatory_sites_dataset %&gt;% filter(GENE %in% unique(all_pY_sites$HGNC_Symbol), str_detect(MOD_RSD, &quot;Y&quot;) ) , 
+#          by = c( &quot;HGNC_Symbol&quot; = &quot;GENE&quot;, &quot;MOD_RSD&quot; )) </code></pre>
 </div>
 <div id="pst-3" class="section level4">
 <h4>pST</h4>

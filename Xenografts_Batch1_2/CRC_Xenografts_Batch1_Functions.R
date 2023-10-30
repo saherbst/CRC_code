@@ -69,36 +69,122 @@ GGPlotly_Volcano <- function(dep, contrast = "guess", proteins_of_interest = FAL
   plotly::ggplotly(p) 
 }
 
-Run_GSEA <- function(DEP_result, comparison){
-  ranked_list <- rowData(DEP_result) %>% 
-    as_tibble() %>%
-    select(HGNC_Symbol, FC = comparison) %>% 
-    mutate(absFC = abs(FC) ) %>%
-    group_by(HGNC_Symbol) %>%
-    arrange(desc(absFC) ) %>%
-    slice(1) %>%
-    ungroup %>%
-    arrange(FC)
-  
-  ranked_vector <- unlist(ranked_list[,2])
-  names(ranked_vector) <- mapIds(org.Hs.eg.db, 
-                                 keys = ranked_list$HGNC_Symbol,
-                                 column = "ENTREZID", keytype = "SYMBOL")
-  
-  ranked_vector <- ranked_vector[!is.na(names(ranked_vector)) ]
-  
-  pathways <- reactomePathways(names(ranked_vector))
-  fgseaRes <- fgsea(pathways, ranked_vector, maxSize=500)
-  
-  print(head(fgseaRes))
-  
-  topPathwaysUp <- fgseaRes[ES > 0][head(order(pval), n=10), pathway]
-  topPathwaysDown <- fgseaRes[ES < 0][head(order(pval), n=10), pathway]
-  topPathways <- c(topPathwaysUp, rev(topPathwaysDown))
-  ggplot() + theme_void()
-  plotGseaTable(pathways[topPathways], ranked_vector, fgseaRes, 
-                gseaParam=0.5)
-}
+#Run_GSEA <- function(DEP_result, comparison, return_df = FALSE, print_main_pathways = TRUE, pval_main_pathways = 0.05, 
+#                     ptmGSEA = FALSE, ptmGSEA_site_df = FALSE, PtmSigdb = FALSE, single_pathway= FALSE){
+#  if(ptmGSEA){
+#    if(any(!is.object(PtmSigdb), !is.object(ptmGSEA_site_df) )){stop("Please provide PtmSigdb and a dataframe for converting the sequences to phosphosite plus IDs")}
+#    ranked_list <- left_join( ( rowData(DEP_result) %>% 
+#                                  as_tibble() %>%
+#                                  select(HGNC_Symbol, Annotated_Sequence, FC = all_of( comparison) )  ),
+#                              ptmGSEA_site_df %>% select(HGNC_Symbol, Annotated_Sequence, SITE_GRP_ID) ) %>%
+#      select(SITE_GRP_ID, FC) %>%
+#      group_by(SITE_GRP_ID) %>%
+#      summarise(FC = mean(FC)) %>%
+#      ungroup %>%
+#      filter(!is.na(SITE_GRP_ID))
+#    ranked_vector <- ranked_list$FC
+#    names(ranked_vector) <- ranked_list$SITE_GRP_ID
+#    PtmSigdb_detected <- PtmSigdb %>% filter(site.psp.grpid %in% names(ranked_vector)) %>% select(signature, site.psp.grpid)%>% unique
+#    
+#    pathways.names <- unique(PtmSigdb_detected$signature)
+#    pathways <- vector("list", length(pathways.names))
+#    names(pathways) <- pathways.names
+#    
+#    for(i in 1:nrow(PtmSigdb_detected)){
+#      if( PtmSigdb_detected[i,1] %in% names(pathways)){
+#        replacementlist <- list(c(pathways[[unname(unlist(PtmSigdb_detected[i,1] ))]], unname( unlist( PtmSigdb_detected[i,2]) ) ) )
+#        names(replacementlist) <- unname(unlist(PtmSigdb_detected[i,1] ))
+#        pathways[unname(unlist(PtmSigdb_detected[i,1] ))] <- 
+#          modifyList(pathways[unname(unlist(PtmSigdb_detected[i,1] ))], replacementlist )
+#      }
+#    }
+#    
+#  }else{
+#    ranked_list <- rowData(DEP_result) %>% 
+#      as_tibble() %>%
+#      select(HGNC_Symbol, FC = all_of( comparison) ) %>% 
+#      mutate(absFC = abs(FC) ) %>%
+#      group_by(HGNC_Symbol) %>%
+#      arrange(desc(absFC) ) %>%
+#      slice(1) %>%
+#      ungroup %>%
+#      arrange(FC)
+#    
+#    ranked_vector <- unlist(ranked_list[,2])
+#    names(ranked_vector) <- mapIds(org.Hs.eg.db, 
+#                                   keys = ranked_list$HGNC_Symbol,
+#                                   column = "ENTREZID", keytype = "SYMBOL")
+#    
+#    ranked_vector <- ranked_vector[!is.na(names(ranked_vector)) ]
+#    pathways <- reactomePathways(names(ranked_vector))
+#  }
+#  
+#  fgseaRes <- fgsea(pathways, ranked_vector, maxSize=500)
+#  
+#  #print(head(fgseaRes))
+#  if(nrow(fgseaRes  )>1 ){
+#    DT::datatable(fgseaRes) %>% DT::formatRound(c(2,3,4,5,6), 3)
+#  }
+#  
+#  topPathwaysUp <- fgseaRes[ES > 0][head(order(pval), n=10), pathway]
+#  topPathwaysDown <- fgseaRes[ES < 0][head(order(pval), n=10), pathway]
+#  topPathways <- c(topPathwaysUp, rev(topPathwaysDown))
+#  ggplot() + theme_void()
+#  plotGseaTable(pathways[topPathways], ranked_vector, fgseaRes, 
+#                gseaParam=0.5)
+#  if(print_main_pathways){
+#    collapsedPathways <- collapsePathways(fgseaRes[order(pval)][padj < pval_main_pathways],
+#                                          pathways, ranked_vector, pval.threshold =  pval_main_pathways)
+#    mainPathways <- fgseaRes[pathway %in% collapsedPathways$mainPathways][
+#      order(-NES), pathway]
+#    print(mainPathways)
+#    
+#  }
+#  if(return_df & !is.character(single_pathway) ){
+#    return(fgseaRes)
+#  }
+#  if( is.character(single_pathway) ){
+#    enr_plot <- plotEnrichment(pathways[[single_pathway]],  ranked_vector) + labs(title=single_pathway)
+#    print(enr_plot)
+#    if(ptmGSEA){
+#      return(left_join( ptmGSEA_site_df %>% filter(SITE_GRP_ID %in% pathways[[single_pathway]]),
+#                        ranked_list %>% filter(SITE_GRP_ID %in% pathways[[single_pathway]])) %>%
+#               select(HGNC_Symbol, Annotated_Sequence, MOD_RSD, FC) %>% arrange(desc( FC) ))
+#    }
+#    
+#  }
+#}
+
+#Run_GSEA <- function(DEP_result, comparison){
+#  ranked_list <- rowData(DEP_result) %>% 
+#    as_tibble() %>%
+#    select(HGNC_Symbol, FC = comparison) %>% 
+#    mutate(absFC = abs(FC) ) %>%
+#    group_by(HGNC_Symbol) %>%
+#    arrange(desc(absFC) ) %>%
+#    slice(1) %>%
+#    ungroup %>%
+#    arrange(FC)
+#  
+#  ranked_vector <- unlist(ranked_list[,2])
+#  names(ranked_vector) <- mapIds(org.Hs.eg.db, 
+#                                 keys = ranked_list$HGNC_Symbol,
+#                                 column = "ENTREZID", keytype = "SYMBOL")
+#  
+#  ranked_vector <- ranked_vector[!is.na(names(ranked_vector)) ]
+#  
+#  pathways <- reactomePathways(names(ranked_vector))
+#  fgseaRes <- fgsea(pathways, ranked_vector, maxSize=500)
+#  
+#  print(head(fgseaRes))
+#  
+#  topPathwaysUp <- fgseaRes[ES > 0][head(order(pval), n=10), pathway]
+#  topPathwaysDown <- fgseaRes[ES < 0][head(order(pval), n=10), pathway]
+#  topPathways <- c(topPathwaysUp, rev(topPathwaysDown))
+#  ggplot() + theme_void()
+#  plotGseaTable(pathways[topPathways], ranked_vector, fgseaRes, 
+#                gseaParam=0.5)
+#}
 
 Return_DEP_Hits_Plots <- function(data, DEP_result, comparison){
   plot.new()
